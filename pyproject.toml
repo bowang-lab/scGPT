@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "scGPT"
+version = "0.1.0"
+description = "Large-scale generative pretrain of single cell using transformer."
+authors = ["Haotian <subercui@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.7.1,<3.11"
+pandas = "1.3.5"
+scvi-tools = "^0.16.0"
+llvmlite = "^0.38.0"
+scanpy = "^1.9.1"
+torch = "1.13.0"
+torchtext = "0.14.0"
+transformers = "^4.18.0"
+numba = "^0.55.1"
+scikit-misc = "^0.1.4"
+umap-learn = "^0.5.3"
+leidenalg = "^0.8.10"
+datasets = "^2.3.0"
+typing-extensions = "^4.2.0"
+scib = "^1.0.3"
+flash-attn = "1.0.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = "^22.3.0"
+tensorflow = "^2.8.0"
+torch-geometric = "2.3.0"
+cell-gears = "^0.0.1"
+dcor = "~0.5.3"
+wandb = "^0.12.3"
+plotly = "^5.3.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
