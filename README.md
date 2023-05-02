@@ -14,20 +14,29 @@ $ poetry install
 
 The `flash-attn` dependency usually requires specific GPU and CUDA version. If you encounter any issues, please refer to the [flash-attn](https://github.com/HazyResearch/flash-attention/tree/main) repository for installation instructions.
 
+## Pretrained scGPT checkpoints
+
+Please download the pretrained scGPT checkpoints from [here](https://drive.google.com/drive/folders/1kkug5C7NjvXIwQGGaGoqXTk_Lb_pDrBU?usp=sharing).
+
 ## Fine-tune scGPT for scRNA-seq integration
 
-Please see our example code in [examples/finetune_integration.py](examples/finetune_integration.py).
+Please see our example code in [examples/finetune_integration.py](examples/finetune_integration.py). By default, the script assumes the scGPT checkpoint folder stored in the `examples/save` directory.
 
 ## To-do-list
 
-- [ ] Upload the pretrained moedel
+- [x] Upload the pretrained model checkpoint
 - [ ] Publish to pypi
 - [ ] Provide the pretraining code with generative attention masking
 - [ ] Finetuning examples for multi-omics integration, cell tyep annotation, perturbation prediction, cell generation
 - [ ] Example code for Gene Regulatory Network analysis
 - [ ] Documentation website with readthedocs
+- [ ] Bump up to pytorch 2.0
 - [ ] New pretraining on larger datasets
 - [ ] Reference mapping example
+
+## Contributing
+
+We greatly welcome contributions to scGPT. Please submit a pull request if you have any ideas or bug fixes. We also welcome any issues you encounter while using scGPT.
 
 ## Acknowledgements
 
