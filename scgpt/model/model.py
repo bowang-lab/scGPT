@@ -659,6 +659,7 @@ class FlashTransformerEncoderLayer(nn.Module):
         src: Tensor,
         src_mask: Optional[Tensor] = None,
         src_key_padding_mask: Optional[Tensor] = None,
+        **kwargs,
     ) -> Tensor:
         r"""Pass the input through the encoder layer.
 
