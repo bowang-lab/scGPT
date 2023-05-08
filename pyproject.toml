@@ -1,15 +1,19 @@
 [tool.poetry]
 name = "scGPT"
-version = "0.1.0"
+version = "0.1.2"
 description = "Large-scale generative pretrain of single cell using transformer."
+license = "MIT"
 authors = ["Haotian <subercui@gmail.com>"]
+repository = "https://github.com/bowang-lab/scGPT"
+homepage = "https://github.com/bowang-lab/scGPT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.7.1,<3.11"
+python = ">=3.7.13,<3.11"
 pandas = "1.3.5"
 scvi-tools = "^0.16.0"
 llvmlite = "^0.38.0"
-scanpy = "^1.9.1"
+scanpy = "~1.9.1"
 torch = "1.13.0"
 torchtext = "0.14.0"
 transformers = "^4.18.0"

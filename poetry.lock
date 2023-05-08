@@ -3078,8 +3078,8 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 
 [metadata]
 lock-version = "1.1"
-python-versions = ">=3.7.1,<3.11"
-content-hash = "2cf132c3d2b8703203d39e344c1ed3bff0970cddea34f49aaea51ec42c45e549"
+python-versions = ">=3.7.13,<3.11"
+content-hash = "56a158f1cc7fb82e51cdc2252883845526db2a5afaa758c10c6c4f760bc8557b"
 
 [metadata.files]
 absl-py = [
