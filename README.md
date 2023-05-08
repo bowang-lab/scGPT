@@ -4,6 +4,18 @@ This is the official codebase for **scGPT: Towards Building a Foundation Model f
 
 ## Installation
 
+scGPT is available on PyPI. To install scGPT, run the following command:
+
+```bash
+$ pip install scgpt
+```
+
+[Optional] We recommend using [wandb](https://wandb.ai/) for logging and visualization.
+
+```bash
+$ pip install wandb
+```
+
 For developing, we are using the [Poetry](https://python-poetry.org/) package manager. To install Poetry, follow the instructions [here](https://python-poetry.org/docs/#installation).
 
 ```bash
@@ -12,7 +24,7 @@ $ cd scGPT
 $ poetry install
 ```
 
-The `flash-attn` dependency usually requires specific GPU and CUDA version. If you encounter any issues, please refer to the [flash-attn](https://github.com/HazyResearch/flash-attention/tree/main) repository for installation instructions.
+**Note**: The `flash-attn` dependency usually requires specific GPU and CUDA version. If you encounter any issues, please refer to the [flash-attn](https://github.com/HazyResearch/flash-attention/tree/main) repository for installation instructions.
 
 ## Pretrained scGPT checkpoints
 
@@ -25,7 +37,7 @@ Please see our example code in [examples/finetune_integration.py](examples/finet
 ## To-do-list
 
 - [x] Upload the pretrained model checkpoint
-- [ ] Publish to pypi
+- [x] Publish to pypi
 - [ ] Provide the pretraining code with generative attention masking
 - [ ] Finetuning examples for multi-omics integration, cell tyep annotation, perturbation prediction, cell generation
 - [ ] Example code for Gene Regulatory Network analysis
