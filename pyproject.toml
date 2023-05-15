@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scGPT"
-version = "0.1.2"
+version = "0.1.2.post1"
 description = "Large-scale generative pretrain of single cell using transformer."
 license = "MIT"
 authors = ["Haotian <subercui@gmail.com>"]
@@ -24,7 +24,7 @@ leidenalg = "^0.8.10"
 datasets = "^2.3.0"
 typing-extensions = "^4.2.0"
 scib = "^1.0.3"
-flash-attn = "1.0.1"
+flash-attn = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
