@@ -152,7 +152,7 @@ if config.load_model is not None:
     with open(model_config_file, "r") as f:
         model_configs = json.load(f)
     logger.info(
-        f"Resume model from {model_file}, the model args will override the "
+        f"Resume model from {model_file}, the model args will be overriden by the "
         f"config {model_config_file}."
     )
     embsize = model_configs["embsize"]
@@ -160,6 +160,11 @@ if config.load_model is not None:
     d_hid = model_configs["d_hid"]
     nlayers = model_configs["nlayers"]
     n_layers_cls = model_configs["n_layers_cls"]
+else:
+    embsize = config.layer_size 
+    nhead = config.nhead
+    nlayers = config.nlayers  
+    d_hid = config.layer_size
 
 
 # %%
@@ -395,7 +400,7 @@ model = TransformerModel(
     n_input_bins=n_input_bins,
     ecs_threshold=config.ecs_thres,
     explicit_zero_prob=explicit_zero_prob,
-    use_fast_transformer=True,
+    use_fast_transformer=config.fast_transformer,
     pre_norm=config.pre_norm,
 )
 if config.load_model is not None:
