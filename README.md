@@ -2,6 +2,8 @@
 
 This is the official codebase for **scGPT: Towards Building a Foundation Model for Single-Cell Multi-omics Using Generative AI**.
 
+!UPDATE: We have released several new pretrained scGPT checkpoints. Please see the [Pretrained scGPT checkpoints](#pretrained-scGPT-checkpoints) section for more details.
+
 ## Installation
 
 scGPT is available on PyPI. To install scGPT, run the following command:
@@ -28,7 +30,13 @@ $ poetry install
 
 ## Pretrained scGPT checkpoints
 
-Please download the pretrained scGPT checkpoints from [here](https://drive.google.com/drive/folders/1kkug5C7NjvXIwQGGaGoqXTk_Lb_pDrBU?usp=sharing).
+Here is the list of pretrained models. Please find the links for downloading the checkpoint folders. We recommend using the `whole-human` model for most applications by default. If your fine-tuning dataset shares similar cell type context with the training data of the organ-specific models, these models can usually demonstrate competitive performance as well.
+
+| Model name                | Description                                             | Download                                                                                     |
+| :------------------------ | :------------------------------------------------------ | :------------------------------------------------------------------------------------------- |
+| whole-human (recommended) | Pretrained on 33 million normal human cells.            | [link](https://drive.google.com/drive/folders/1oWh_-ZRdhtoGQ2Fw24HP41FgLoomVo-y?usp=sharing) |
+| brain                     | Pretrained on 13.2 million brain cells.                 | [link](https://drive.google.com/drive/folders/1vf1ijfQSk7rGdDGpBntR5bi5g6gNt-Gx?usp=sharing) |
+| blood                     | Pretrained on 10.3 million blood and bone marrow cells. | [link](https://drive.google.com/drive/folders/1kkug5C7NjvXIwQGGaGoqXTk_Lb_pDrBU?usp=sharing) |
 
 ## Fine-tune scGPT for scRNA-seq integration
 
@@ -45,6 +53,7 @@ Please see our example code in [examples/finetune_integration.py](examples/finet
 - [ ] Bump up to pytorch 2.0
 - [ ] New pretraining on larger datasets
 - [ ] Reference mapping example
+- [ ] Publish to huggingface model hub
 
 ## Contributing
 
