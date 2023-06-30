@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH -p interactive
+#SBATCH --gres=gpu:1
+#SBATCH -p rtx6000
+#SBATCH -c 6
+#SBATCH --mem=120G
+#SBATCH --job-name=test_jupyter
+#SBATCH --output=jupyter_notebook_%j.log
+#SBATCH --ntasks=1
+#SBATCH --time=05:00:00
+
+. /etc/profile.d/lmod.sh
+bash ~/.bashrc
+
+date;hostname;pwd
+
+cd $SLURM_SUBMIT_DIR
+module load anaconda/3.9
+module load python/3.9
+export PATH=/h/chloexq/.cache/pypoetry/virtualenvs/scgpt--qSLVbd1-py3.9/bin:$PATH
+module load cuda-11.7
+export PATH="/pkgs/R-3.6.1/bin:$PATH"
+export LD_LIBRARY_PATH="/pkgs/R-3.6.1/lib/R/lib:$LD_LIBRARY_PATH"
+export XDG_RUNTIME_DIR=""
+jupyter notebook --ip 0.0.0.0 --port 8888
