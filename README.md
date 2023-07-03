@@ -32,7 +32,7 @@ $ poetry install
 
 **Note**: The `flash-attn` dependency usually requires specific GPU and CUDA version. If you encounter any issues, please refer to the [flash-attn](https://github.com/HazyResearch/flash-attention/tree/main) repository for installation instructions. For now, May 2023, we recommend using CUDA 11.7 and flash-attn<1.0.5 due to various issues reported about installing new versions of flash-attn.
 
-## Pretrained scGPT checkpoints
+## Pretrained scGPT Model Zoo
 
 Here is the list of pretrained models. Please find the links for downloading the checkpoint folders. We recommend using the `whole-human` model for most applications by default. If your fine-tuning dataset shares similar cell type context with the training data of the organ-specific models, these models can usually demonstrate competitive performance as well.
 
@@ -53,10 +53,10 @@ Please see our example code in [examples/finetune_integration.py](examples/finet
 - [x] Publish to pypi
 - [ ] Provide the pretraining code with generative attention masking
 - [ ] Finetuning examples for multi-omics integration, cell tyep annotation, perturbation prediction, cell generation
-- [ ] Example code for Gene Regulatory Network analysis
-- [ ] Documentation website with readthedocs
+- [x] Example code for Gene Regulatory Network analysis
+- [x] Documentation website with readthedocs
 - [ ] Bump up to pytorch 2.0
-- [ ] New pretraining on larger datasets
+- [x] New pretraining on larger datasets
 - [ ] Reference mapping example
 - [ ] Publish to huggingface model hub
 
