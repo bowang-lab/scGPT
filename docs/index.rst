@@ -39,7 +39,7 @@ Welcome to the documentation for scGPT, a Python package for single-cell multi-o
    :maxdepth: 2
    :caption: API Reference:
 
-   modules
+   scgpt
 
 .. toctree::
    :maxdepth: 2

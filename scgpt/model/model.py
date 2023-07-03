@@ -510,7 +510,6 @@ class FastTransformerEncoderWrapper(nn.Module):
     def build_fast_transformer_encoder(
         d_model: int, nhead: int, d_hid: int, nlayers: int, dropout: float
     ) -> nn.Module:
-
         from fast_transformers.builders import TransformerEncoderBuilder
 
         if d_model % nhead != 0:
@@ -537,7 +536,6 @@ class FastTransformerEncoderWrapper(nn.Module):
         src: Tensor,
         src_key_padding_mask: torch.BoolTensor,
     ) -> "LengthMask":
-
         from fast_transformers.masking import LengthMask
 
         seq_len = src.shape[1]
@@ -906,25 +904,6 @@ class ClsDecoder(nn.Module):
 class MVCDecoder(nn.Module):
     """
     Decoder for the masked value prediction for cell embeddings.
-
-    There are actually three ways of making this, all start with gene_embs -> query_vecs,
-    and then:
-    1. cell_emb x W x query vecs.
-       This one makes the most sense, since in the query space, the query look at
-       different dimensions of cel_emb and sync them. This one has explicit interaction.
-    2. FC([cell_emb, query_vecs]).
-       This one has the benifit to have smaller query_vecs and makes them like bottle
-       neck layer. For example 64 dims.
-    3. FC(cell_emb + query_vecs).
-
-    **NOTE**:
-    1. it is important to make gene query vectors directly from the input
-    gene embs. Because have to make sure there is no value information mixed in,
-    and that is the only place to get the raw gene embs.
-    2. Bare in mind to avoid short cut for the model to just predict
-    value form the query. Make sure predict based on the cell_emb.
-    3. Guess it will be better to use sigmoid for the query vecs.
-    4. TODO: Optionally, can even try detach the gene_embs when making query_vec.
     """
 
     def __init__(

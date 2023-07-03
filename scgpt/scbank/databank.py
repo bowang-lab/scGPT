@@ -428,7 +428,7 @@ class DataBank:
             overwrite (:obj:`bool`): Whether to overwrite the existing data tables.
             immediate_save (:obj:`bool`): Whether to save the data immediately after
                 updating. Will save to :attr:`self.meta_info.on_disk_path`. If not
-                provided, will follow :arrr:`self.settings.immediate_save` instead.
+                provided, will follow :attr:`self.settings.immediate_save` instead.
                 Default to None.
         """
         if not isinstance(new_tables, list) or not all(

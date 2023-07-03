@@ -1,7 +1,7 @@
 scgpt package
 =============
 
-Subpackages
+Modules
 -----------
 
 .. toctree::
@@ -12,10 +12,7 @@ Subpackages
    scgpt.tokenizer
    scgpt.utils
 
-Submodules
-----------
-
-scgpt.data\_collator module
+scgpt.data\_collator
 ---------------------------
 
 .. automodule:: scgpt.data_collator
@@ -23,7 +20,7 @@ scgpt.data\_collator module
    :undoc-members:
    :show-inheritance:
 
-scgpt.data\_sampler module
+scgpt.data\_sampler
 --------------------------
 
 .. automodule:: scgpt.data_sampler
@@ -31,7 +28,7 @@ scgpt.data\_sampler module
    :undoc-members:
    :show-inheritance:
 
-scgpt.loss module
+scgpt.loss
 -----------------
 
 .. automodule:: scgpt.loss
@@ -39,7 +36,7 @@ scgpt.loss module
    :undoc-members:
    :show-inheritance:
 
-scgpt.preprocess module
+scgpt.preprocess
 -----------------------
 
 .. automodule:: scgpt.preprocess
@@ -47,18 +44,10 @@ scgpt.preprocess module
    :undoc-members:
    :show-inheritance:
 
-scgpt.trainer module
+scgpt.trainer
 --------------------
 
 .. automodule:: scgpt.trainer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: scgpt
    :members:
    :undoc-members:
    :show-inheritance:
