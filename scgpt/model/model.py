@@ -9,8 +9,14 @@ import torch.distributed as dist
 import torch.nn.functional as F
 from torch.nn import TransformerEncoder, TransformerEncoderLayer
 from torch.distributions import Bernoulli
-from flash_attn.flash_attention import FlashMHA
 from tqdm import trange
+
+try:
+    from flash_attn.flash_attention import FlashMHA
+except ImportError:
+    import warnings
+
+    warnings.warn("flash_attn is not installed")
 
 from .dsbn import DomainSpecificBatchNorm1d
 from .grad_reverse import grad_reverse
