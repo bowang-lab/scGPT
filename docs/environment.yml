@@ -5,7 +5,7 @@ channels:
 dependencies:
   - r-base[version='>=4.2']
   - r-devtools
-  - python=3.9
+  - python=3.7
   - pip>=22.3
   - pip:
       - anndata==0.8.0
@@ -22,10 +22,11 @@ dependencies:
       - scipy==1.7.3
       - scvi-tools==0.16.4
       - setuptools==59.5.0
-      - scib
+      - scib==1.0.3
       - torch==1.13.0
       - torchtext==0.14.0
       - tqdm==4.64.0
       - transformers==4.20.1
       - typing-extensions==4.2.0
       - umap-learn==0.5.3
+      - sphinx<7.0
