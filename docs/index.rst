@@ -4,15 +4,35 @@
    contain the root `toctree` directive.
 
 Welcome to scGPT's documentation!
+
+.. image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
+    :target: https://scgpt.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. image:: https://img.shields.io/pypi/v/scgpt.svg
+      :target: https://pypi.python.org/pypi/scgpt
+      :alt: PyPI version
+
+.. image:: https://img.shields.io/pypi/pyversions/scgpt.svg
+      :target: https://pypi.python.org/pypi/scgpt
+      :alt: PyPI supported Python versions
+
+Welcome to the documentation for scGPT, a Python package for single-cell multi-omic data analysis using pretrained foundation models. This package is based on the work of scGPT (`GitHub <https://github.com/bowang-lab/scGPT>`_, `preprint <https://www.biorxiv.org/content/10.1101/2023.04.30.538439>`_) and provides a set of functions for data preprocessing, visualization, and model evaluation.
+
 =================================
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Getting Started:
 
    introduction
    installation
-   tutorial
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorials:
+
+   tut_annotation
 
 .. toctree::
    :maxdepth: 2
