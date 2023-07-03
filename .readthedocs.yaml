@@ -10,6 +10,7 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.9"
+    R: "4.1"
     # You can also specify other tool versions:
     # nodejs: "19"
     # rust: "1.64"
