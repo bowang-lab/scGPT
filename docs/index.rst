@@ -29,10 +29,11 @@ Welcome to the documentation for scGPT, a Python package for single-cell multi-o
    installation
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Tutorials:
 
-   tut_annotation
+   tutorial_grn
+   tutorial_integraion
 
 .. toctree::
    :maxdepth: 2
