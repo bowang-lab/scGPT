@@ -10,6 +10,23 @@ Welcome to scGPT's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   introduction
+   installation
+   tutorial
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference:
+
+   modules
+
+.. toctree::
+   :maxdepth: 2
+   :caption: References:
+
+   faq
+   references
+
 
 
 Indices and tables
