@@ -80,7 +80,7 @@ We sincerely thank the authors of following open-source projects:
 ```bibtex
 @article{cui2023scGPT,
 title={scGPT: Towards Building a Foundation Model for Single-Cell Multi-omics Using Generative AI},
-author={Cui, Haotian and Wang, Chloe and Maan, Hassaan and Wang, Bo},
+author={Cui, Haotian and Wang, Chloe and Maan, Hassaan and Pang, Kuan and Luo, Fengning and Wang, Bo},
 journal={bioRxiv},
 year={2023},
 publisher={Cold Spring Harbor Laboratory}
