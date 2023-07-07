@@ -55,7 +55,7 @@ Please see our example code in [examples/finetune_integration.py](examples/finet
 - [x] Upload the pretrained model checkpoint
 - [x] Publish to pypi
 - [ ] Provide the pretraining code with generative attention masking
-- [ ] Finetuning examples for multi-omics integration, cell tyep annotation, perturbation prediction, cell generation
+- [ ] Finetuning examples for multi-omics integration, cell type annotation, perturbation prediction, cell generation
 - [x] Example code for Gene Regulatory Network analysis
 - [x] Documentation website with readthedocs
 - [ ] Bump up to pytorch 2.0
