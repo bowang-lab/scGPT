@@ -34,6 +34,7 @@ Welcome to the documentation for scGPT, a Python package for single-cell multi-o
 
    tutorial_grn
    tutorial_integraion
+   tutorial_annotation
 
 .. toctree::
    :maxdepth: 2
