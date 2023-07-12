@@ -682,6 +682,8 @@ class FlashTransformerEncoderLayer(nn.Module):
             # no padding tokens in src
             src_key_padding_mask_ = None
         else:
+            if src_key_padding_mask.dtype != torch.bool:
+                src_key_padding_mask = src_key_padding_mask.bool()
             # NOTE: the FlashMHA uses mask 0 for padding tokens, which is the opposite
             src_key_padding_mask_ = ~src_key_padding_mask
 
