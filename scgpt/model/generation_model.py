@@ -18,7 +18,7 @@ from .model import (
     FastTransformerEncoderWrapper,
     FlashTransformerEncoderLayer,
 )
-from ..utils import tensorlist2tensor
+from ..utils import map_raw_id_to_vocab_id
 from .. import logger
 
 
@@ -270,6 +270,7 @@ class TransformerGenerator(nn.Module):
         self,
         batch_data,
         include_zero_gene="batch-wise",
+        gene_ids=None,
         amp=True,
     ) -> Tensor:
         """
@@ -288,6 +289,7 @@ class TransformerGenerator(nn.Module):
         pert_flags = x[:, 1].long().view(batch_size, -1)
 
         if include_zero_gene in ["all", "batch-wise"]:
+            assert gene_ids is not None
             if include_zero_gene == "all":
                 input_gene_ids = torch.arange(ori_gene_values.size(1), device=device)
             else:  # batch-wise
@@ -297,12 +299,15 @@ class TransformerGenerator(nn.Module):
             input_values = ori_gene_values[:, input_gene_ids]
             input_pert_flags = pert_flags[:, input_gene_ids]
 
+            mapped_input_gene_ids = map_raw_id_to_vocab_id(input_gene_ids, gene_ids)
+            mapped_input_gene_ids = mapped_input_gene_ids.repeat(batch_size, 1)
+
             src_key_padding_mask = torch.zeros_like(
                 input_values, dtype=torch.bool, device=device
             )
             with torch.cuda.amp.autocast(enabled=amp):
                 output_dict = self(
-                    input_gene_ids.repeat(batch_size, 1),
+                    mapped_input_gene_ids,
                     input_values,
                     input_pert_flags,
                     src_key_padding_mask=src_key_padding_mask,
@@ -315,46 +320,6 @@ class TransformerGenerator(nn.Module):
             output_values = output_dict["mlm_output"].float()
             pred_gene_values = torch.zeros_like(ori_gene_values)
             pred_gene_values[:, input_gene_ids] = output_values
-        else:
-            input_gene_ids_list = []
-            input_values = []
-            input_pert_flags = []
-
-            tmp_ = ori_gene_values != 0
-            for row_i in range(batch_size):
-                input_gene_id = tmp_[row_i].nonzero().flatten()
-                input_gene_ids_list.append(input_gene_id)
-                input_values.append(ori_gene_values[row_i][input_gene_id])
-                input_pert_flags.append(pert_flags[row_i][input_gene_id])
-
-            input_gene_ids = tensorlist2tensor(
-                input_gene_ids_list, pad_value=self.pad_token_id
-            )
-            input_values = tensorlist2tensor(input_values, pad_value=self.pad_value)
-            input_pert_flags = tensorlist2tensor(
-                input_pert_flags, pad_value=self.pert_pad_id
-            )
-
-            src_key_padding_mask = input_gene_ids.eq(self.pad_token_id)
-            with torch.cuda.amp.autocast(enabled=amp):
-                output_dict = self(
-                    input_gene_ids,
-                    input_values,
-                    input_pert_flags,
-                    src_key_padding_mask=src_key_padding_mask,
-                    CLS=False,
-                    CCE=False,
-                    MVC=False,
-                    ECS=False,
-                    do_sample=True,
-                )
-            output_values = output_dict["mlm_output"].float()
-            pred_gene_values = torch.zeros_like(ori_gene_values)
-            for row_i in range(batch_size):
-                input_gene_id = input_gene_ids_list[row_i]
-                pred_gene_values[row_i, input_gene_id] = output_values[row_i][
-                    : len(input_gene_id)
-                ]
         return pred_gene_values
 
 

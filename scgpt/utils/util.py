@@ -4,6 +4,7 @@ import logging
 import os
 from pathlib import Path
 import random
+import subprocess
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -96,6 +97,10 @@ def get_free_gpu():
     )
 
     return idx
+
+
+def get_git_commit():
+    return subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
 
 
 def histogram(
@@ -259,6 +264,41 @@ def tensorlist2tensor(tensorlist, pad_value):
     for i, t in enumerate(tensorlist):
         tensor[i, : len(t)] = t
     return tensor
+
+
+def map_raw_id_to_vocab_id(
+    raw_ids: Union[np.ndarray, torch.Tensor],
+    gene_ids: np.ndarray,
+) -> Union[np.ndarray, torch.Tensor]:
+    """
+    Map some raw ids which are indices of the raw gene names to the indices of the
+
+    Args:
+        raw_ids: the raw ids to map
+        gene_ids: the gene ids to map to
+    """
+    if isinstance(raw_ids, torch.Tensor):
+        device = raw_ids.device
+        dtype = raw_ids.dtype
+        return_pt = True
+        raw_ids = raw_ids.cpu().numpy()
+    elif isinstance(raw_ids, np.ndarray):
+        return_pt = False
+        dtype = raw_ids.dtype
+    else:
+        raise ValueError(f"raw_ids must be either torch.Tensor or np.ndarray.")
+
+    if raw_ids.ndim != 1:
+        raise ValueError(f"raw_ids must be 1d, got {raw_ids.ndim}d.")
+
+    if gene_ids.ndim != 1:
+        raise ValueError(f"gene_ids must be 1d, got {gene_ids.ndim}d.")
+
+    mapped_ids: np.ndarray = gene_ids[raw_ids]
+    assert mapped_ids.shape == raw_ids.shape
+    if return_pt:
+        return torch.from_numpy(mapped_ids).type(dtype).to(device)
+    return mapped_ids.astype(dtype)
 
 
 # Wrapper for all scib metrics, we leave out some metrics like hvg_score, cell_cyvle,
