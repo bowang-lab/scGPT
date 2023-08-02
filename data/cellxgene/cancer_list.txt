@@ -1,0 +1,21 @@
+malignant ovarian serous tumor
+glioblastoma
+lung adenocarcinoma
+squamous cell lung carcinoma
+small cell lung carcinoma
+non-small cell lung carcinoma
+B-cell non-Hodgkin lymphoma
+follicular lymphoma
+gastric cancer
+blastoma
+pilocytic astrocytoma
+acute myeloid leukemia
+tubular adenoma
+clear cell renal carcinoma
+adenocarcinoma
+tubulovillous adenoma
+colorectal cancer
+Wilms tumor
+acute promyelocytic leukemia
+neuroendocrine carcinoma
+chromophobe renal cell carcinoma

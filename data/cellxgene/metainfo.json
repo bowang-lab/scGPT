@@ -1,0 +1,244 @@
+{
+  "f72958f5-7f42-4ebb-98da-445b0c6de516": {
+    "name": "Azimuth meta-analysis of 10 datasets of healthy and diseased human lung",
+    "url": "https://cellxgene.cziscience.com/e/f72958f5-7f42-4ebb-98da-445b0c6de516.cxg/",
+    "include_disease": ["normal", "COVID-19"]
+  },
+  "d0c12af4-c0e4-4c7b-873a-70752b449689": {
+    "name": "Stromal cells (all non-immune cells)",
+    "url": "https://cellxgene.cziscience.com/e/d0c12af4-c0e4-4c7b-873a-70752b449689.cxg/"
+  },
+  "804d9a85-665b-45c6-b204-13457fdcc7ac": {
+    "name": "Megakaryocyte/erythroid cells",
+    "url": "https://cellxgene.cziscience.com/e/804d9a85-665b-45c6-b204-13457fdcc7ac.cxg/"
+  },
+  "6a30bf44-c490-41ac-965b-0bb58432b10a": {
+    "name": "HSC/progenitor cells",
+    "url": "https://cellxgene.cziscience.com/e/6a30bf44-c490-41ac-965b-0bb58432b10a.cxg/"
+  },
+  "2aa1c93c-4ef3-4e9a-98e7-0bd37933953c": {
+    "name": "Myeloid cells",
+    "url": "https://cellxgene.cziscience.com/e/2aa1c93c-4ef3-4e9a-98e7-0bd37933953c.cxg/"
+  },
+  "3affa268-8a74-460a-ac9b-a984c0832469": {
+    "name": "Lymphoid cells",
+    "url": "https://cellxgene.cziscience.com/e/3affa268-8a74-460a-ac9b-a984c0832469.cxg/"
+  },
+  "fd072bc3-2dfb-46f8-b4e3-467cb3223182": {
+    "name": "Full dataset of single-cell RNA-seq profiles from 9 developmental tissues across gestation (4-17 pcw)",
+    "url": "https://cellxgene.cziscience.com/e/fd072bc3-2dfb-46f8-b4e3-467cb3223182.cxg/"
+  },
+  "48101fa2-1a63-4514-b892-53ea1d3a8657": {
+    "name": "HSC/immune cells (all hematopoietic-derived cells)",
+    "url": "https://cellxgene.cziscience.com/e/48101fa2-1a63-4514-b892-53ea1d3a8657.cxg/"
+  },
+  "aa633105-e8e5-4dcc-b72d-6da6c191b3e9": {
+    "name": "NK/T cells",
+    "url": "https://cellxgene.cziscience.com/e/aa633105-e8e5-4dcc-b72d-6da6c191b3e9.cxg/"
+  },
+  "1b9d8702-5af8-4142-85ed-020eb06ec4f6": {
+    "name": "Global",
+    "url": "https://cellxgene.cziscience.com/e/1b9d8702-5af8-4142-85ed-020eb06ec4f6.cxg/"
+  },
+  "71be997d-ff75-41b9-8a9f-1288c865f921": {
+    "name": "B cell compartment",
+    "url": "https://cellxgene.cziscience.com/e/71be997d-ff75-41b9-8a9f-1288c865f921.cxg/"
+  },
+  "fe52003e-1460-4a65-a213-2bb1a508332f": {
+    "name": "Myeloid compartment",
+    "url": "https://cellxgene.cziscience.com/e/fe52003e-1460-4a65-a213-2bb1a508332f.cxg/"
+  },
+  "53d208b0-2cfd-4366-9866-c3c6114081bc": {
+    "name": "Tabula Sapiens - All Cells",
+    "url": "https://cellxgene.cziscience.com/e/53d208b0-2cfd-4366-9866-c3c6114081bc.cxg/"
+  },
+  "c5d88abe-f23a-45fa-a534-788985e93dad": {
+    "name": "Tabula Sapiens - Immune",
+    "url": "https://cellxgene.cziscience.com/e/c5d88abe-f23a-45fa-a534-788985e93dad.cxg/"
+  },
+  "ae29ebd0-1973-40a4-a6af-d15a5f77a80f": {
+    "name": "T & innate lymphoid cells",
+    "url": "https://cellxgene.cziscience.com/e/ae29ebd0-1973-40a4-a6af-d15a5f77a80f.cxg/"
+  },
+  "218acb0f-9f2f-4f76-b90b-15a4b7c7f629": {
+    "name": "multiplexed scRNA-seq of 1.2 million PBMCs from adult lupus samples",
+    "url": "https://cellxgene.cziscience.com/e/218acb0f-9f2f-4f76-b90b-15a4b7c7f629.cxg/",
+    "include_disease": ["normal"]
+  },
+  "3faad104-2ab8-4434-816d-474d8d2641db": {
+    "name": "Single-cell eQTL mapping identifies cell type specific genetic control of autoimmune disease",
+    "url": "https://cellxgene.cziscience.com/e/3faad104-2ab8-4434-816d-474d8d2641db.cxg/"
+  },
+  "ebc2e1ff-c8f9-466a-acf4-9d291afaf8b3": {
+    "name": "COMBAT project: single cell gene expression data from COVID-19, sepsis and flu patient PBMCs",
+    "url": "https://cellxgene.cziscience.com/e/ebc2e1ff-c8f9-466a-acf4-9d291afaf8b3.cxg/"
+  },
+  "2a498ace-872a-4935-984b-1afa70fd9886": {
+    "name": "PBMC",
+    "url": "https://cellxgene.cziscience.com/e/2a498ace-872a-4935-984b-1afa70fd9886.cxg/"
+  },
+  "c05fb583-eb2f-4e3a-8e74-f9bd6414e418": {
+    "name": "healthy young bone marrow donor",
+    "url": "https://cellxgene.cziscience.com/e/c05fb583-eb2f-4e3a-8e74-f9bd6414e418.cxg/"
+  },
+  "cd4c96bb-ad66-4e83-ba9e-a7df8790eb12": {
+    "name": "3 healthy young and 3 healthy old bone marrow donors (Reference sample)",
+    "url": "https://cellxgene.cziscience.com/e/cd4c96bb-ad66-4e83-ba9e-a7df8790eb12.cxg/"
+  },
+  "d3566d6a-a455-4a15-980f-45eb29114cab": {
+    "name": "blood and bone marrow from a healthy young donor",
+    "url": "https://cellxgene.cziscience.com/e/d3566d6a-a455-4a15-980f-45eb29114cab.cxg/"
+  },
+  "1a2e3350-28a8-4f49-b33c-5b67ceb001f6": {
+    "name": "Fetal Bone Marrow (10x)",
+    "url": "https://cellxgene.cziscience.com/e/1a2e3350-28a8-4f49-b33c-5b67ceb001f6.cxg/"
+  },
+  "343ff97c-85df-494b-8400-beb937618611": {
+    "name": "Human Fetal Bone Marrow (CITE-seq)",
+    "url": "https://cellxgene.cziscience.com/e/343ff97c-85df-494b-8400-beb937618611.cxg/"
+  },
+  "471647b3-04fe-4c76-8372-3264feb950e8": {
+    "name": "CD34+ Fetal Bone Marrow, Fetal Liver, Cord Blood (CITE-seq)",
+    "url": "https://cellxgene.cziscience.com/e/471647b3-04fe-4c76-8372-3264feb950e8.cxg/"
+  },
+  "4c4cd77c-8fee-4836-9145-16562a8782fe": {
+    "name": "Individual Single-Cell RNA-seq PBMC Data from Lee et al.",
+    "url": "https://cellxgene.cziscience.com/e/4c4cd77c-8fee-4836-9145-16562a8782fe.cxg/"
+  },
+  "db0752b9-f20e-40b8-8997-992f3ae0bb2e": {
+    "name": "Classical Monocyte sub_clusters of COVID-19 Immune Altas: Integration of 5 public COVID-19 PBMC single-cell datasets",
+    "url": "https://cellxgene.cziscience.com/e/db0752b9-f20e-40b8-8997-992f3ae0bb2e.cxg/"
+  },
+  "e763ed0d-0e5a-4b8e-9514-6da3d9e47956": {
+    "name": "Platelet sub_clusters of COVID-19 Immune Altas: Integration of 5 public COVID-19 PBMC single-cell datasets",
+    "url": "https://cellxgene.cziscience.com/e/e763ed0d-0e5a-4b8e-9514-6da3d9e47956.cxg/"
+  },
+  "59b69042-47c2-47fd-ad03-d21beb99818f": {
+    "name": "Individual Single-Cell RNA-seq PBMC Data from Arunachalam et al.",
+    "url": "https://cellxgene.cziscience.com/e/59b69042-47c2-47fd-ad03-d21beb99818f.cxg/"
+  },
+  "d9b4bc69-ed90-4f5f-99b2-61b0681ba436": {
+    "name": "B Cell/Plasmablast Sub_clusters of COVID-19 Immune Altas: Integration of 5 public COVID-19 PBMC single-cell datasets",
+    "url": "https://cellxgene.cziscience.com/e/d9b4bc69-ed90-4f5f-99b2-61b0681ba436.cxg/"
+  },
+  "96a3f64b-0ee9-40d8-91e9-813ce38261c9": {
+    "name": "COVID-19 Immune Altas: Integration of 5 public COVID-19 PBMC single-cell datasets",
+    "url": "https://cellxgene.cziscience.com/e/96a3f64b-0ee9-40d8-91e9-813ce38261c9.cxg/"
+  },
+  "bc2a7b3d-f04e-477e-96c9-9d5367d5425c": {
+    "name": "T Cell and NK Cell Subtypes of COVID-19 Immune Altas: Integration of 5 public COVID-19 PBMC single-cell datasets",
+    "url": "https://cellxgene.cziscience.com/e/bc2a7b3d-f04e-477e-96c9-9d5367d5425c.cxg/"
+  },
+  "055ca631-6ffb-40de-815e-b931e10718c0": {
+    "name": "Individual Single-Cell RNA-seq PBMC Data from Wilk et al.",
+    "url": "https://cellxgene.cziscience.com/e/055ca631-6ffb-40de-815e-b931e10718c0.cxg/"
+  },
+  "ae5341b8-60fb-4fac-86db-86e49ee66287": {
+    "name": "Individual Single-Cell RNA-seq PBMC Data from Guo et al.",
+    "url": "https://cellxgene.cziscience.com/e/ae5341b8-60fb-4fac-86db-86e49ee66287.cxg/"
+  },
+  "5e717147-0f75-4de1-8bd2-6fda01b8d75f": {
+    "name": "Individual Single-Cell RNA-seq PBMC Data from Schulte-Schrepping et al.",
+    "url": "https://cellxgene.cziscience.com/e/5e717147-0f75-4de1-8bd2-6fda01b8d75f.cxg/"
+  },
+  "01ad3cd7-3929-4654-84c0-6db05bd5fd59": {
+    "name": "Type I interferon autoantibodies are associated with systemic immune alterations in patients with COVID-19",
+    "url": "https://cellxgene.cziscience.com/e/01ad3cd7-3929-4654-84c0-6db05bd5fd59.cxg/"
+  },
+  "ed5d841d-6346-47d4-ab2f-7119ad7e3a35": {
+    "name": "nygc multimodal pbmc",
+    "url": "https://cellxgene.cziscience.com/e/ed5d841d-6346-47d4-ab2f-7119ad7e3a35.cxg/"
+  },
+  "c7775e88-49bf-4ba2-a03b-93f00447c958": {
+    "name": "Single-cell multi-omics analysis of the immune response in COVID-19",
+    "url": "https://cellxgene.cziscience.com/e/c7775e88-49bf-4ba2-a03b-93f00447c958.cxg/"
+  },
+  "30cd5311-6c09-46c9-94f1-71fe4b91813c": {
+    "name": "Time-resolved Systems Immunology Reveals a Late Juncture Linked to Fatal COVID-19: Innate Cells",
+    "url": "https://cellxgene.cziscience.com/e/30cd5311-6c09-46c9-94f1-71fe4b91813c.cxg/"
+  },
+  "c874f155-9bf9-4928-b821-f52c876b3e48": {
+    "name": "49 years old male - Fresh PBMCs (1 day post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/c874f155-9bf9-4928-b821-f52c876b3e48.cxg/"
+  },
+  "8a554710-08bc-4005-87cd-da9675bdc2e7": {
+    "name": "82 years old female - Fresh PBMCs (1 day post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/8a554710-08bc-4005-87cd-da9675bdc2e7.cxg/"
+  },
+  "881fe679-c6e0-45a3-9427-c4e81be6921f": {
+    "name": "66 years old female - Fresh PBMCs (2 days post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/881fe679-c6e0-45a3-9427-c4e81be6921f.cxg/"
+  },
+  "eeacb0c1-2217-4cf6-b8ce-1f0fedf1b569": {
+    "name": "49 years old male - Fresh PBMCs (3 days post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/eeacb0c1-2217-4cf6-b8ce-1f0fedf1b569.cxg/"
+  },
+  "ed9e9f96-4f08-49d2-bef5-b2c29adf3edc": {
+    "name": "66 years old female - Fresh PBMCs (4 days post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/ed9e9f96-4f08-49d2-bef5-b2c29adf3edc.cxg/"
+  },
+  "01c93cf6-b695-4e30-a26e-121ae8b16a9e": {
+    "name": "66 years old female - Fresh PBMCs (7 days post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/01c93cf6-b695-4e30-a26e-121ae8b16a9e.cxg/"
+  },
+  "db59611b-42de-4035-93aa-1ed39f38b467": {
+    "name": "49 years old male - Fresh PBMCs (2 days post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/db59611b-42de-4035-93aa-1ed39f38b467.cxg/"
+  },
+  "ea786a06-5855-48b7-80d7-0313a21a2044": {
+    "name": "66 years old female - Fresh PBMCs (3 days post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/ea786a06-5855-48b7-80d7-0313a21a2044.cxg/"
+  },
+  "84230ea4-998d-4aa8-8456-81dd54ce23af": {
+    "name": "74 years old female - Fresh PBMCs (3 days post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/84230ea4-998d-4aa8-8456-81dd54ce23af.cxg/"
+  },
+  "50eb1e23-b8d4-4f76-a184-44e5541fa05a": {
+    "name": "74 years old female - Fresh PBMCs (8 days post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/50eb1e23-b8d4-4f76-a184-44e5541fa05a.cxg/"
+  },
+  "79ef1959-a6b4-4cac-82ca-30feaec48df1": {
+    "name": "74 years old female - Fresh PBMCs (7 days post-intubation)",
+    "url": "https://cellxgene.cziscience.com/e/79ef1959-a6b4-4cac-82ca-30feaec48df1.cxg/"
+  },
+  "9dbab10c-118d-496b-966a-67f1763a6b7d": {
+    "name": "Large-scale single-cell analysis reveals critical immune characteristics of COVID-19 patients",
+    "url": "https://cellxgene.cziscience.com/e/9dbab10c-118d-496b-966a-67f1763a6b7d.cxg/"
+  },
+  "krasnow_lab_human_lung_cell_atlas_10x-1-remixed": {
+    "name": "Krasnow Lab Human Lung Cell Atlas, 10X",
+    "url": "https://cellxgene.cziscience.com/e/krasnow_lab_human_lung_cell_atlas_10x-1-remixed.cxg/"
+  },
+  "krasnow_lab_human_lung_cell_atlas_smartseq2-2-remixed": {
+    "name": "Krasnow Lab Human Lung Cell Atlas, Smart-seq2",
+    "url": "https://cellxgene.cziscience.com/e/krasnow_lab_human_lung_cell_atlas_smartseq2-2-remixed.cxg/"
+  },
+  "c2a461b1-0c15-4047-9fcb-1f966fe55100": {
+    "name": "Autoimmunity PBMCs",
+    "url": "https://cellxgene.cziscience.com/e/c2a461b1-0c15-4047-9fcb-1f966fe55100.cxg/"
+  },
+  "fa8605cf-f27e-44af-ac2a-476bee4410d3": {
+    "name": "PBMCs",
+    "url": "https://cellxgene.cziscience.com/e/fa8605cf-f27e-44af-ac2a-476bee4410d3.cxg/"
+  },
+  "Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection": {
+    "name": "Single-cell atlas of peripheral immune response to SARS-CoV-2 infection",
+    "url": "https://cellxgene.cziscience.com/e/Single_cell_atlas_of_peripheral_immune_response_to_SARS_CoV_2_infection.cxg/"
+  },
+  "human_cell_landscape": {
+    "name": "Construction of a human cell landscape at single-cell level",
+    "url": "https://cellxgene.cziscience.com/e/human_cell_landscape.cxg/"
+  },
+  "01209dce-3575-4bed-b1df-129f57fbc031": {
+    "name": "Single-cell transcriptomics of human T cells reveals tissue and activation signatures in health and disease",
+    "url": "https://cellxgene.cziscience.com/e/01209dce-3575-4bed-b1df-129f57fbc031.cxg/"
+  },
+  "5bc42b88-bb76-4954-927b-8bb7369adc64": {
+    "name": "Pregnant Uterus (All)",
+    "url": "https://cellxgene.cziscience.com/e/5bc42b88-bb76-4954-927b-8bb7369adc64.cxg/"
+  },
+  "de2c780c-1747-40bd-9ccf-9588ec186cee": {
+    "name": "Immunophenotyping of COVID-19 and influenza highlights the role of type I interferons in development of severe COVID-19",
+    "url": "https://cellxgene.cziscience.com/e/de2c780c-1747-40bd-9ccf-9588ec186cee.cxg/"
+  }
+}
