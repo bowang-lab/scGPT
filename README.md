@@ -10,6 +10,8 @@ This is the official codebase for **scGPT: Towards Building a Foundation Model f
 
 ## Installation
 
+scGPT works with Python >= 3.7 and R >=3.6.1. Please make sure you have the correct version of Python and R installed pre-installation.
+
 scGPT is available on PyPI. To install scGPT, run the following command:
 
 ```bash
