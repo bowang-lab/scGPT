@@ -184,7 +184,7 @@ class Preprocessor:
                 # bins = np.sort(np.unique(bins))
                 # NOTE: comment this line for now, since this will make the each category
                 # has different relative meaning across datasets
-                non_zero_digits = self._digitize(non_zero_row, bins)
+                non_zero_digits = _digitize(non_zero_row, bins)
                 assert non_zero_digits.min() >= 1
                 assert non_zero_digits.max() <= n_bins - 1
                 binned_row = np.zeros_like(row, dtype=np.int64)
@@ -193,34 +193,6 @@ class Preprocessor:
                 bin_edges.append(np.concatenate([[0], bins]))
             adata.layers[self.result_binned_key] = np.stack(binned_rows)
             adata.obsm["bin_edges"] = np.stack(bin_edges)
-
-    def _digitize(self, x: np.ndarray, bins: np.ndarray) -> np.ndarray:
-        """
-        Digitize the data into bins. This method spreads data uniformly when bins
-        have same values.
-
-        Args:
-
-        x (:class:`np.ndarray`):
-            The data to digitize.
-        bins (:class:`np.ndarray`):
-            The bins to use for digitization, in increasing order.
-
-        Returns:
-
-        :class:`np.ndarray`:
-            The digitized data.
-        """
-        assert x.ndim == 1 and bins.ndim == 1
-
-        left_digits = np.digitize(x, bins)
-        right_difits = np.digitize(x, bins, right=True)
-
-        rands = np.random.rand(len(x))  # uniform random numbers
-
-        digits = rands * (right_difits - left_digits) + left_digits
-        digits = np.ceil(digits).astype(np.int64)
-        return digits
 
     def check_logged(self, adata: AnnData, obs_key: Optional[str] = None) -> bool:
         """
@@ -248,6 +220,41 @@ class Preprocessor:
         return True
 
 
+def _digitize(x: np.ndarray, bins: np.ndarray, side="one") -> np.ndarray:
+    """
+    Digitize the data into bins. This method spreads data uniformly when bins
+    have same values.
+
+    Args:
+
+    x (:class:`np.ndarray`):
+        The data to digitize.
+    bins (:class:`np.ndarray`):
+        The bins to use for digitization, in increasing order.
+    side (:class:`str`, optional):
+        The side to use for digitization. If "one", the left side is used. If
+        "both", the left and right side are used. Default to "one".
+
+    Returns:
+
+    :class:`np.ndarray`:
+        The digitized data.
+    """
+    assert x.ndim == 1 and bins.ndim == 1
+
+    left_digits = np.digitize(x, bins)
+    if side == "one":
+        return left_digits
+
+    right_difits = np.digitize(x, bins, right=True)
+
+    rands = np.random.rand(len(x))  # uniform random numbers
+
+    digits = rands * (right_difits - left_digits) + left_digits
+    digits = np.ceil(digits).astype(np.int64)
+    return digits
+
+
 def binning(
     row: Union[np.ndarray, torch.Tensor], n_bins: int
 ) -> Union[np.ndarray, torch.Tensor]:
@@ -261,10 +268,10 @@ def binning(
         non_zero_ids = row.nonzero()
         non_zero_row = row[non_zero_ids]
         bins = np.quantile(non_zero_row, np.linspace(0, 1, n_bins - 1))
-        non_zero_digits = np.digitize(non_zero_row, bins)
+        non_zero_digits = _digitize(non_zero_row, bins)
         binned_row = np.zeros_like(row, dtype=np.int64)
         binned_row[non_zero_ids] = non_zero_digits
     else:
         bins = np.quantile(row, np.linspace(0, 1, n_bins - 1))
-        binned_row = np.digitize(row, bins)
+        binned_row = _digitize(row, bins)
     return torch.from_numpy(binned_row) if not return_np else binned_row.astype(dtype)

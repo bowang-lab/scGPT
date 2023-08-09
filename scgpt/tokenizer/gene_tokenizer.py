@@ -290,7 +290,7 @@ def tokenize_batch(
             values = np.insert(values, 0, 0)
         if return_pt:
             genes = torch.from_numpy(genes).long()
-            values = torch.from_numpy(values)
+            values = torch.from_numpy(values).float()
         tokenized_data.append((genes, values))
     return tokenized_data
 
