@@ -6,7 +6,13 @@ This is the official codebase for **scGPT: Towards Building a Foundation Model f
 
 [Documentation](https://scgpt.readthedocs.io/en/latest/)
 
-!UPDATE: We have released several new pretrained scGPT checkpoints. Please see the [Pretrained scGPT checkpoints](#pretrained-scGPT-checkpoints) section for more details.
+**!UPDATE**: We have released several new pretrained scGPT checkpoints. Please see the [Pretrained scGPT checkpoints](#pretrained-scGPT-checkpoints) section for more details.
+
+### Online apps
+
+scGPT is now available at the following online apps as well, so you can get started simply with your browser!
+
+- Run the [cell annotation app](https://app.superbio.ai/apps/274?id=64d205cb980ff714de831ee0) and the [GRN inference app](https://app.superbio.ai/apps/270?id=64b804fb823bc93b64c10a76) with cloud gpus. Thanks to the [Superbio.ai](https://app.superbio.ai/) team for helping create and host the interactive tools.
 
 ## Installation
 
