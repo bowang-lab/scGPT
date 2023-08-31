@@ -9,10 +9,9 @@
 #     - gpu: whether to use gpu for building the index
 #     - num_threads: the number of threads to use for building the index
 #     - index: the type of the index to build, different index may suits for fast or memory efficient building
-#     - index_param: the parameters for the index
-#     - pca: whether to use pca to reduce the dimension of the embedding
 #     - output_dir: the directory to save the index
 
+import json
 import os
 import pickle
 import threading
@@ -44,9 +43,7 @@ class FaissIndexBuilder:
         meta_key: Optional[str] = "cell_type",
         gpu: bool = False,
         num_threads: Optional[int] = None,
-        index: str = "IVF4096,Flat",
-        index_param: Dict[str, any] = {"nlist": 4096, "nprobe": 32},
-        pca: bool = False,
+        index: str = "PCA64,IVF16384_HNSW32,PQ16",
     ):
         """
         Initialize an AtlasIndexBuilder object.
@@ -62,9 +59,7 @@ class FaissIndexBuilder:
             meta_key (str, optional): Key to access the metadata in the input files. Defaults to "cell_type".
             gpu (bool): Whether to use GPU acceleration. Defaults to False.
             num_threads (int, optional): Number of threads to use for CPU parallelism. If None, will use all available cores. Defaults to None.
-            index (str, optional): Faiss index type and parameters. Defaults to "IVF4096,Flat".
-            index_param (Dict[str, any], optional): Faiss index parameters. Defaults to {"nlist": 4096, "nprobe": 32}.
-            pca (bool): Whether to perform PCA on the embeddings. Defaults to False.
+            index (str, optional): Faiss index factory str, see [here](https://github.com/facebookresearch/faiss/wiki/The-index-factory) and [here](https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index#if-1m---10m-ivf65536_hnsw32). Defaults to "PCA64,IVF16384_HNSW32,PQ16".
         """
         self.embedding_dir = embedding_dir
         self.output_dir = output_dir
@@ -77,8 +72,6 @@ class FaissIndexBuilder:
         self.gpu = gpu
         self.num_threads = num_threads
         self.index = index
-        self.index_param = index_param
-        self.pca = pca
 
         if self.num_threads is None:
             try:
@@ -152,35 +145,94 @@ class FaissIndexBuilder:
             raise NotImplementedError
         embeddings = np.concatenate(embeddings, axis=0, dtype=np.float32)
         meta_labels = np.concatenate(meta_labels, axis=0)
+
+        assert embeddings.shape[0] == meta_labels.shape[0]
+
         return embeddings, meta_labels
 
-    def build_index(self):
+    def _auto_set_nprobe(self, index: faiss.Index):
+        # set nprobe if IVF index
+        index_ivf = faiss.try_extract_index_ivf(index)
+        if index_ivf:
+            nlist = index_ivf.nlist
+            ori_nprobe = index_ivf.nprobe
+            index_ivf.nprobe = (
+                16
+                if nlist <= 1e4
+                else 32
+                if nlist <= 8e4
+                else 64
+                if nlist <= 4e5
+                else 128
+            )
+            print(
+                f"Set nprobe from {ori_nprobe} to {index_ivf.nprobe} for {nlist} clusters"
+            )
+
+    def build_index(self) -> faiss.Index:
         # Load embeddings and meta labels
         embeddings, meta_labels = self._load_data()
 
-        # Reduce dimension using PCA
-        if self.pca:
-            pca = faiss.PCAMatrix(embeddings.shape[1], embeddings.shape[1] // 2)
-            pca.train(embeddings)
-            embeddings = pca.apply_py(embeddings)
-
         # Build index
+        index = faiss.index_factory(embeddings.shape[1], self.index, faiss.METRIC_L2)
+        self._auto_set_nprobe(index)
         if self.gpu:
             res = faiss.StandardGpuResources()
-            index = getattr(faiss, self.index)(embeddings.shape[1], **self.index_param)
             index = faiss.index_cpu_to_gpu(res, 0, index)
-        else:
-            index = getattr(faiss, self.index)(embeddings.shape[1], **self.index_param)
+        index.verbose = True
+        print(f"Training index {self.index} on {embeddings.shape[0]} embeddings ...")
         index.train(embeddings)
+        print("Adding embeddings to index ...")
         index.add(embeddings)
 
         # Save index
         os.makedirs(self.output_dir, exist_ok=True)
-        index_file = os.path.join(self.output_dir, "index")
+        # create sub folder if the output_dir is not empty, and throw warning
+        if len(os.listdir(self.output_dir)) > 0:
+            print(
+                f"Warning: the output_dir {self.output_dir} is not empty, the index will be saved to a sub folder named index"
+            )
+            self.output_dir = os.path.join(self.output_dir, "index")
+            assert not os.path.exists(self.output_dir)
+            os.makedirs(self.output_dir, exist_ok=True)
+
+        # save index file, meta file and a json of index config params
+        index_file = os.path.join(self.output_dir, "index.faiss")
         meta_file = os.path.join(self.output_dir, "meta.pkl")
-        faiss.write_index(index, index_file)
+        index_config_file = os.path.join(self.output_dir, "index_config.json")
+        faiss.write_index(
+            faiss.index_gpu_to_cpu(index) if self.gpu else index, index_file
+        )
         with open(meta_file, "wb") as f:
             pickle.dump(meta_labels, f)
+        with open(index_config_file, "w") as f:
+            json.dump(
+                {
+                    "embedding_dir": self.embedding_dir,
+                    "meta_dir": self.meta_dir,
+                    "recusive": self.recusive,
+                    "embedding_file_suffix": self.embedding_file_suffix,
+                    "meta_file_suffix": self.meta_file_suffix,
+                    "embedding_key": self.embedding_key,
+                    "meta_key": self.meta_key,
+                    "gpu": self.gpu,
+                    "num_threads": self.num_threads,
+                    "index": self.index,
+                    "num_embeddings": embeddings.shape[0],
+                    "num_features": embeddings.shape[1],
+                },
+                f,
+            )
+        print(f"All files saved to {self.output_dir}")
+        print(
+            f"Index saved to {index_file}, "
+            f"file size: {os.path.getsize(index_file) / 1024 / 1024} MB"
+        )
+
+        return index
+
+    # TODO: load index
+    # TODO: set nprobe
 
 
 if __name__ == "__main__":
@@ -192,25 +244,19 @@ if __name__ == "__main__":
     embedding_key = "embedding"
     meta_key = "meta"
     gpu = False
-    num_threads = 4
-    index = "IVF4096,Flat"
-    index_param = {"nlist": 4096, "nprobe": 32}
-    pca = False
+    index = "PCA64,IVF16384_HNSW32,PQ16"
     output_dir = "path/to/output/dir"
 
     # Build index
     builder = FaissIndexBuilder(
         embedding_dir,
         meta_dir,
-        embedding_file_suffix,
-        meta_file_suffix,
-        embedding_key,
-        meta_key,
-        gpu,
-        num_threads,
-        index,
-        index_param,
-        pca,
-        output_dir,
+        embedding_file_suffix=embedding_file_suffix,
+        meta_file_suffix=meta_file_suffix,
+        embedding_key=embedding_key,
+        meta_key=meta_key,
+        gpu=gpu,
+        index=index,
+        output_dir=output_dir,
     )
     builder.build_index()
