@@ -8,7 +8,7 @@
 #     - meta_key: the key to the meta in the meta file
 #     - gpu: whether to use gpu for building the index
 #     - num_threads: the number of threads to use for building the index
-#     - index: the type of the index to build, different index may suits for fast or memory efficient building
+#     - index_desc: the type of the index to build, different index may suits for fast or memory efficient building
 #     - output_dir: the directory to save the index
 
 import json
@@ -43,7 +43,7 @@ class FaissIndexBuilder:
         meta_key: Optional[str] = "cell_type",
         gpu: bool = False,
         num_threads: Optional[int] = None,
-        index: str = "PCA64,IVF16384_HNSW32,PQ16",
+        index_desc: str = "PCA64,IVF16384_HNSW32,PQ16",
     ):
         """
         Initialize an AtlasIndexBuilder object.
@@ -59,7 +59,7 @@ class FaissIndexBuilder:
             meta_key (str, optional): Key to access the metadata in the input files. Defaults to "cell_type".
             gpu (bool): Whether to use GPU acceleration. Defaults to False.
             num_threads (int, optional): Number of threads to use for CPU parallelism. If None, will use all available cores. Defaults to None.
-            index (str, optional): Faiss index factory str, see [here](https://github.com/facebookresearch/faiss/wiki/The-index-factory) and [here](https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index#if-1m---10m-ivf65536_hnsw32). Defaults to "PCA64,IVF16384_HNSW32,PQ16".
+            index_desc (str, optional): Faiss index factory str, see [here](https://github.com/facebookresearch/faiss/wiki/The-index-factory) and [here](https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index#if-1m---10m-ivf65536_hnsw32). Defaults to "PCA64,IVF16384_HNSW32,PQ16".
         """
         self.embedding_dir = embedding_dir
         self.output_dir = output_dir
@@ -71,7 +71,7 @@ class FaissIndexBuilder:
         self.meta_key = meta_key
         self.gpu = gpu
         self.num_threads = num_threads
-        self.index = index
+        self.index_desc = index_desc
 
         if self.num_threads is None:
             try:
@@ -174,13 +174,17 @@ class FaissIndexBuilder:
         embeddings, meta_labels = self._load_data()
 
         # Build index
-        index = faiss.index_factory(embeddings.shape[1], self.index, faiss.METRIC_L2)
+        index = faiss.index_factory(
+            embeddings.shape[1], self.index_desc, faiss.METRIC_L2
+        )
         self._auto_set_nprobe(index)
         if self.gpu:
             res = faiss.StandardGpuResources()
             index = faiss.index_cpu_to_gpu(res, 0, index)
         index.verbose = True
-        print(f"Training index {self.index} on {embeddings.shape[0]} embeddings ...")
+        print(
+            f"Training index {self.index_desc} on {embeddings.shape[0]} embeddings ..."
+        )
         index.train(embeddings)
         print("Adding embeddings to index ...")
         index.add(embeddings)
@@ -217,7 +221,7 @@ class FaissIndexBuilder:
                     "meta_key": self.meta_key,
                     "gpu": self.gpu,
                     "num_threads": self.num_threads,
-                    "index": self.index,
+                    "index_desc": self.index_desc,
                     "num_embeddings": embeddings.shape[0],
                     "num_features": embeddings.shape[1],
                 },
@@ -244,7 +248,7 @@ if __name__ == "__main__":
     embedding_key = "embedding"
     meta_key = "meta"
     gpu = False
-    index = "PCA64,IVF16384_HNSW32,PQ16"
+    index_desc = "PCA64,IVF16384_HNSW32,PQ16"
     output_dir = "path/to/output/dir"
 
     # Build index
@@ -256,7 +260,7 @@ if __name__ == "__main__":
         embedding_key=embedding_key,
         meta_key=meta_key,
         gpu=gpu,
-        index=index,
+        index_desc=index_desc,
         output_dir=output_dir,
     )
     builder.build_index()
