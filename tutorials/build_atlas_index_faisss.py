@@ -96,6 +96,13 @@ class FaissIndexBuilder:
                     "embedding_key is required when embedding_file_suffix is not .h5ad"
                 )
 
+        # See the index factory https://github.com/facebookresearch/faiss/wiki/Lower-memory-footprint#simplifying-index-construction
+        # Choose index https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index, particularly, see these options:
+        #     - https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index#if-quite-important-then-opqm_dpqmx4fsr
+        #     - https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index#if-quite-important-then-opqm_dpqmx4fsr
+        #     - For the clustering option, see https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index#if-quite-important-then-opqm_dpqmx4fsr and https://gist.github.com/mdouze/46d6bbbaabca0b9778fca37ed2bcccf6
+        # May choose the index option based on the benchmark here https://github.com/facebookresearch/faiss/wiki/Indexing-1G-vectors#10m-datasets
+
     def _load_data(self):
         # Load embeddings and meta labels
         embeddings = []
@@ -143,7 +150,7 @@ class FaissIndexBuilder:
                     meta_labels.append(meta_label)
         else:
             raise NotImplementedError
-        embeddings = np.concatenate(embeddings, axis=0)
+        embeddings = np.concatenate(embeddings, axis=0, dtype=np.float32)
         meta_labels = np.concatenate(meta_labels, axis=0)
         return embeddings, meta_labels
 
