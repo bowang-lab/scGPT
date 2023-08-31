@@ -13,12 +13,12 @@
 
 import json
 import os
-import pickle
 import threading
 from pathlib import Path
 from typing import Dict, Optional, Union
 
 import faiss
+import h5py
 import numpy as np
 import scanpy as sc
 from tqdm import tqdm
@@ -150,14 +150,27 @@ class FaissIndexBuilder:
 
         return embeddings, meta_labels
 
-    def _auto_set_nprobe(self, index: faiss.Index):
+    def _auto_set_nprobe(self, index: faiss.Index, nprobe: int = None) -> Optional[int]:
+        """
+        Set nprobe for IVF index based on the number of clusters.
+
+        Args:
+            index (faiss.Index): The index to set nprobe.
+            nprobe (int, optional): The nprobe to set. If None, will set based on the number of clusters. Defaults to None.
+
+        Returns:
+            int: The nprobe set.
+        """
+
         # set nprobe if IVF index
         index_ivf = faiss.try_extract_index_ivf(index)
         if index_ivf:
             nlist = index_ivf.nlist
             ori_nprobe = index_ivf.nprobe
             index_ivf.nprobe = (
-                16
+                nprobe
+                if nprobe is not None
+                else 16
                 if nlist <= 1e4
                 else 32
                 if nlist <= 8e4
@@ -168,6 +181,7 @@ class FaissIndexBuilder:
             print(
                 f"Set nprobe from {ori_nprobe} to {index_ivf.nprobe} for {nlist} clusters"
             )
+            return index_ivf.nprobe
 
     def build_index(self) -> faiss.Index:
         # Load embeddings and meta labels
@@ -177,7 +191,7 @@ class FaissIndexBuilder:
         index = faiss.index_factory(
             embeddings.shape[1], self.index_desc, faiss.METRIC_L2
         )
-        self._auto_set_nprobe(index)
+        nprobe = self._auto_set_nprobe(index)
         if self.gpu:
             res = faiss.StandardGpuResources()
             index = faiss.index_cpu_to_gpu(res, 0, index)
@@ -202,13 +216,15 @@ class FaissIndexBuilder:
 
         # save index file, meta file and a json of index config params
         index_file = os.path.join(self.output_dir, "index.faiss")
-        meta_file = os.path.join(self.output_dir, "meta.pkl")
+        meta_file = os.path.join(self.output_dir, "meta.h5ad")
         index_config_file = os.path.join(self.output_dir, "index_config.json")
         faiss.write_index(
             faiss.index_gpu_to_cpu(index) if self.gpu else index, index_file
         )
-        with open(meta_file, "wb") as f:
-            pickle.dump(meta_labels, f)
+        with h5py.File(meta_file, "w") as f:
+            f.create_dataset(
+                "meta_labels", data=meta_labels, compression="gzip", chunks=True
+            )
         with open(index_config_file, "w") as f:
             json.dump(
                 {
@@ -224,6 +240,7 @@ class FaissIndexBuilder:
                     "index_desc": self.index_desc,
                     "num_embeddings": embeddings.shape[0],
                     "num_features": embeddings.shape[1],
+                    "nprobe": nprobe,
                 },
                 f,
             )
@@ -235,18 +252,56 @@ class FaissIndexBuilder:
 
         return index
 
-    # TODO: load index
-    # TODO: set nprobe
+    def load_index(
+        self,
+        index_dir: PathLike = None,
+        use_config_file=True,
+    ) -> faiss.Index:
+        """
+        Load index from disk.
+
+        Args:
+            index_dir (PathLike, optional): Path to the directory containing the index files. If None, will load from self.output_dir. Defaults to None.
+            use_config_file (bool, optional): Whether to load the index config file. If True, will load the index config file and use the parameters of gpu, nprobe. Otherwise, will use the parameters of gpu, nprobe in self attributes. Defaults to True.
+
+        Returns:
+            faiss.Index: The loaded index.
+        """
+        if index_dir is None:
+            index_dir = self.output_dir
+
+        index_file = os.path.join(index_dir, "index.faiss")
+        meta_file = os.path.join(index_dir, "meta.h5ad")
+        index_config_file = os.path.join(index_dir, "index_config.json")
+
+        print(f"Loading index and meta from {index_dir} ...")
+        index = faiss.read_index(index_file)
+        with h5py.File(meta_file, "r") as f:
+            meta_labels = f["meta_labels"][:]
+        print(f"Index loaded, num_embeddings: {index.ntotal}")
+        if use_config_file:
+            with open(index_config_file, "r") as f:
+                config = json.load(f)
+            use_gpu = config["gpu"]
+            nprobe = config["nprobe"]
+        else:
+            use_gpu = self.gpu
+            nprobe = None
+
+        self._auto_set_nprobe(index, nprobe=nprobe)
+
+        if use_gpu:
+            res = faiss.StandardGpuResources()
+            index = faiss.index_cpu_to_gpu(res, 0, index)
+
+        return index, meta_labels
 
 
 if __name__ == "__main__":
     # Set options
     embedding_dir = "path/to/embedding/dir"
     meta_dir = "path/to/meta/dir"
-    embedding_file_suffix = ".npy"
-    meta_file_suffix = ".npy"
-    embedding_key = "embedding"
-    meta_key = "meta"
+    embedding_file_suffix = ".h5ad"
     gpu = False
     index_desc = "PCA64,IVF16384_HNSW32,PQ16"
     output_dir = "path/to/output/dir"
@@ -256,9 +311,6 @@ if __name__ == "__main__":
         embedding_dir,
         meta_dir,
         embedding_file_suffix=embedding_file_suffix,
-        meta_file_suffix=meta_file_suffix,
-        embedding_key=embedding_key,
-        meta_key=meta_key,
         gpu=gpu,
         index_desc=index_desc,
         output_dir=output_dir,
