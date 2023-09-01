@@ -15,7 +15,7 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Tuple, Union
 
 import faiss
 import h5py
@@ -150,39 +150,6 @@ class FaissIndexBuilder:
 
         return embeddings, meta_labels
 
-    def _auto_set_nprobe(self, index: faiss.Index, nprobe: int = None) -> Optional[int]:
-        """
-        Set nprobe for IVF index based on the number of clusters.
-
-        Args:
-            index (faiss.Index): The index to set nprobe.
-            nprobe (int, optional): The nprobe to set. If None, will set based on the number of clusters. Defaults to None.
-
-        Returns:
-            int: The nprobe set.
-        """
-
-        # set nprobe if IVF index
-        index_ivf = faiss.try_extract_index_ivf(index)
-        if index_ivf:
-            nlist = index_ivf.nlist
-            ori_nprobe = index_ivf.nprobe
-            index_ivf.nprobe = (
-                nprobe
-                if nprobe is not None
-                else 16
-                if nlist <= 1e4
-                else 32
-                if nlist <= 8e4
-                else 64
-                if nlist <= 4e5
-                else 128
-            )
-            print(
-                f"Set nprobe from {ori_nprobe} to {index_ivf.nprobe} for {nlist} clusters"
-            )
-            return index_ivf.nprobe
-
     def build_index(self) -> faiss.Index:
         # Load embeddings and meta labels
         embeddings, meta_labels = self._load_data()
@@ -191,7 +158,7 @@ class FaissIndexBuilder:
         index = faiss.index_factory(
             embeddings.shape[1], self.index_desc, faiss.METRIC_L2
         )
-        nprobe = self._auto_set_nprobe(index)
+        nprobe = _auto_set_nprobe(index)
         if self.gpu:
             res = faiss.StandardGpuResources()
             index = faiss.index_cpu_to_gpu(res, 0, index)
@@ -252,49 +219,91 @@ class FaissIndexBuilder:
 
         return index
 
-    def load_index(
-        self,
-        index_dir: PathLike = None,
-        use_config_file=True,
-    ) -> faiss.Index:
+    def load_index(self) -> Tuple[faiss.Index, np.ndarray]:
         """
-        Load index from disk.
-
-        Args:
-            index_dir (PathLike, optional): Path to the directory containing the index files. If None, will load from self.output_dir. Defaults to None.
-            use_config_file (bool, optional): Whether to load the index config file. If True, will load the index config file and use the parameters of gpu, nprobe. Otherwise, will use the parameters of gpu, nprobe in self attributes. Defaults to True.
+        Load the index from self.output_dir.
 
         Returns:
-            faiss.Index: The loaded index.
+            faiss.Index: The loaded index and meta labels.
         """
-        if index_dir is None:
-            index_dir = self.output_dir
+        return load_index(self.output_dir, use_config_file=False, use_gpu=self.gpu)
 
-        index_file = os.path.join(index_dir, "index.faiss")
-        meta_file = os.path.join(index_dir, "meta.h5ad")
-        index_config_file = os.path.join(index_dir, "index_config.json")
 
-        print(f"Loading index and meta from {index_dir} ...")
-        index = faiss.read_index(index_file)
-        with h5py.File(meta_file, "r") as f:
-            meta_labels = f["meta_labels"][:]
-        print(f"Index loaded, num_embeddings: {index.ntotal}")
-        if use_config_file:
-            with open(index_config_file, "r") as f:
-                config = json.load(f)
-            use_gpu = config["gpu"]
-            nprobe = config["nprobe"]
-        else:
-            use_gpu = self.gpu
-            nprobe = None
+def load_index(
+    index_dir: PathLike,
+    use_config_file=True,
+    use_gpu=False,
+    nprobe=None,
+) -> Tuple[faiss.Index, np.ndarray]:
+    """
+    Load index from disk.
 
-        self._auto_set_nprobe(index, nprobe=nprobe)
+    Args:
+        index_dir (PathLike): Path to the directory containing the index files.
+        use_config_file (bool, optional): Whether to load the index config file. If True, will load the index config file and use the parameters of gpu, nprobe. Defaults to True.
+        use_gpu (bool, optional): Whether to use GPU acceleration. Only used when use_config_file is False. Defaults to False.
+        nprobe (int, optional): The nprobe to set if index contains :class:`faiss.IndexIVF`. If None, will set based on the number of clusters. Only used when use_config_file is False. Defaults to None.
 
-        if use_gpu:
-            res = faiss.StandardGpuResources()
-            index = faiss.index_cpu_to_gpu(res, 0, index)
+    Returns:
+        faiss.Index: The loaded index and meta labels.
+    """
 
-        return index, meta_labels
+    index_file = os.path.join(index_dir, "index.faiss")
+    meta_file = os.path.join(index_dir, "meta.h5ad")
+    index_config_file = os.path.join(index_dir, "index_config.json")
+
+    print(f"Loading index and meta from {index_dir} ...")
+    index = faiss.read_index(index_file)
+    with h5py.File(meta_file, "r") as f:
+        meta_labels = f["meta_labels"][:]
+    print(f"Index loaded, num_embeddings: {index.ntotal}")
+    if use_config_file:
+        with open(index_config_file, "r") as f:
+            config = json.load(f)
+        use_gpu = config["gpu"]
+        nprobe = config["nprobe"]
+
+    _auto_set_nprobe(index, nprobe=nprobe)
+
+    if use_gpu:
+        res = faiss.StandardGpuResources()
+        index = faiss.index_cpu_to_gpu(res, 0, index)
+
+    return index, meta_labels
+
+
+def _auto_set_nprobe(index: faiss.Index, nprobe: int = None) -> Optional[int]:
+    """
+    Set nprobe for IVF index based on the number of clusters.
+
+    Args:
+        index (faiss.Index): The index to set nprobe.
+        nprobe (int, optional): The nprobe to set. If None, will set based on the number of clusters. Defaults to None.
+
+    Returns:
+        int: The nprobe set.
+    """
+
+    # set nprobe if IVF index
+    index_ivf = faiss.try_extract_index_ivf(index)
+    if index_ivf:
+        nlist = index_ivf.nlist
+        ori_nprobe = index_ivf.nprobe
+        index_ivf.nprobe = (
+            nprobe
+            if nprobe is not None
+            else 16
+            if nlist <= 1e4
+            else 32
+            if nlist <= 8e4
+            else 64
+            if nlist <= 4e5
+            else 128
+        )
+        print(
+            f"Set nprobe from {ori_nprobe} to {index_ivf.nprobe} for {nlist} clusters"
+        )
+        return index_ivf.nprobe
 
 
 if __name__ == "__main__":
