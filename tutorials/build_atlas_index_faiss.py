@@ -150,7 +150,7 @@ class FaissIndexBuilder:
 
         return embeddings, meta_labels
 
-    def build_index(self) -> faiss.Index:
+    def build_index(self) -> Tuple[faiss.Index, np.ndarray]:
         # Load embeddings and meta labels
         embeddings, meta_labels = self._load_data()
 
@@ -217,7 +217,7 @@ class FaissIndexBuilder:
             f"file size: {os.path.getsize(index_file) / 1024 / 1024} MB"
         )
 
-        return index
+        return index, meta_labels
 
     def load_index(self) -> Tuple[faiss.Index, np.ndarray]:
         """
@@ -308,20 +308,18 @@ def _auto_set_nprobe(index: faiss.Index, nprobe: int = None) -> Optional[int]:
 
 if __name__ == "__main__":
     # Set options
-    embedding_dir = "path/to/embedding/dir"
-    meta_dir = "path/to/meta/dir"
+    embedding_dir = "/scratch/ssd004/datasets/cellxgene/embed/brain/"
     embedding_file_suffix = ".h5ad"
-    gpu = False
+    gpu = True
     index_desc = "PCA64,IVF16384_HNSW32,PQ16"
-    output_dir = "path/to/output/dir"
+    output_dir = "/scratch/hdd001/home/haotian/projects/cellxemb/brain"
 
     # Build index
     builder = FaissIndexBuilder(
         embedding_dir,
-        meta_dir,
+        output_dir=output_dir,
         embedding_file_suffix=embedding_file_suffix,
         gpu=gpu,
         index_desc=index_desc,
-        output_dir=output_dir,
     )
-    builder.build_index()
+    index, meta_labels = builder.build_index()
