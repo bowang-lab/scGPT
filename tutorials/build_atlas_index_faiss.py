@@ -1,4 +1,4 @@
-# This script is used to build the index for similarity search using faisss. It supports loading embeddings and meta labels from directories and add to faiss index. The index is saved to disk for later use.
+# This script is used to build the index for similarity search using faiss. It supports loading embeddings and meta labels from directories and add to faiss index. The index is saved to disk for later use.
 # Options can be set to custom the building process, including:
 #     - embedding_dir: the directory to the embedding files
 #     - meta_dir: the directory to the meta files
@@ -36,7 +36,7 @@ class FaissIndexBuilder:
         embedding_dir: PathLike,
         output_dir: PathLike,
         meta_dir: Optional[PathLike] = None,
-        recusive: bool = True,
+        recursive: bool = True,
         embedding_file_suffix: str = ".h5ad",
         meta_file_suffix: Optional[str] = None,
         embedding_key: Optional[str] = None,
@@ -52,7 +52,7 @@ class FaissIndexBuilder:
             embedding_dir (PathLike): Path to the directory containing the input embeddings.
             output_dir (PathLike): Path to the directory where the index files will be saved.
             meta_dir (PathLike, optional): Path to the directory containing the metadata files. If None, the metadata will be loaded from the embedding files. Defaults to None.
-            recusive (bool): Whether to search the embedding and meta directory recursively. Defaults to True.
+            recursive (bool): Whether to search the embedding and meta directory recursively. Defaults to True.
             embedding_file_suffix (str, optional): Suffix of the embedding files. Defaults to ".h5ad" in AnnData format.
             meta_file_suffix (str, optional): Suffix of the metadata files. Defaults to None.
             embedding_key (str, optional): Key to access the embeddings in the input files. If None, will require the input files to be in AnnData format and use the X field. Defaults to None.
@@ -64,7 +64,7 @@ class FaissIndexBuilder:
         self.embedding_dir = embedding_dir
         self.output_dir = output_dir
         self.meta_dir = meta_dir
-        self.recusive = recusive
+        self.recursive = recursive
         self.embedding_file_suffix = embedding_file_suffix
         self.meta_file_suffix = meta_file_suffix
         self.embedding_key = embedding_key
@@ -103,12 +103,12 @@ class FaissIndexBuilder:
         if self.META_FROM_EMBEDDING and self.embedding_file_suffix == ".h5ad":
             embedding_files = (
                 list(Path(self.embedding_dir).rglob("*" + self.embedding_file_suffix))
-                if self.recusive
-                else os.listdir(self.embedding_dir)
+                if self.recursive
+                else list(
+                    Path(self.embedding_dir).glob("*" + self.embedding_file_suffix)
+                )
             )
-            embedding_files = [
-                f for f in embedding_files if f.endswith(self.embedding_file_suffix)
-            ]
+            embedding_files = [str(f) for f in embedding_files]
             embedding_files = sorted(embedding_files)
             if self.num_threads > 1:
                 lock = threading.Lock()
@@ -197,7 +197,7 @@ class FaissIndexBuilder:
                 {
                     "embedding_dir": self.embedding_dir,
                     "meta_dir": self.meta_dir,
-                    "recusive": self.recusive,
+                    "recursive": self.recursive,
                     "embedding_file_suffix": self.embedding_file_suffix,
                     "meta_file_suffix": self.meta_file_suffix,
                     "embedding_key": self.embedding_key,
