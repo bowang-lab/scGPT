@@ -117,9 +117,9 @@ class FaissIndexBuilder:
                 ) as pbar:
 
                     def _load_embedding(file):
-                        embedding = sc.read(file)
-                        embedding = embedding.X
-                        meta_label = embedding.obs[self.meta_key].values
+                        adata = sc.read(file)
+                        embedding = adata.X
+                        meta_label = adata.obs[self.meta_key].values
                         with lock:
                             embeddings.append(embedding)
                             meta_labels.append(meta_label)
@@ -136,9 +136,9 @@ class FaissIndexBuilder:
                 for file in tqdm(
                     embedding_files, desc="Loading embeddings and metalabels"
                 ):
-                    embedding = sc.read(file)
-                    embedding = embedding.X
-                    meta_label = embedding.obs[self.meta_key].values
+                    adata = sc.read(file)
+                    embedding = adata.X
+                    meta_label = adata.obs[self.meta_key].values
                     embeddings.append(embedding)
                     meta_labels.append(meta_label)
         else:
@@ -321,5 +321,6 @@ if __name__ == "__main__":
         embedding_file_suffix=embedding_file_suffix,
         gpu=gpu,
         index_desc=index_desc,
+        # num_threads=1,
     )
     index, meta_labels = builder.build_index()
