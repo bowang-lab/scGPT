@@ -7,13 +7,12 @@
 #     - embedding_key: the key to the embedding in the embedding file
 #     - meta_key: the key to the meta in the meta file
 #     - gpu: whether to use gpu for building the index
-#     - num_threads: the number of threads to use for building the index
+#     - num_workers: the number of threads to use for building the index
 #     - index_desc: the type of the index to build, different index may suits for fast or memory efficient building
 #     - output_dir: the directory to save the index
 
 import json
 import os
-import threading
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
 
@@ -42,7 +41,7 @@ class FaissIndexBuilder:
         embedding_key: Optional[str] = None,
         meta_key: Optional[str] = "cell_type",
         gpu: bool = False,
-        num_threads: Optional[int] = None,
+        num_workers: Optional[int] = None,
         index_desc: str = "PCA64,IVF16384_HNSW32,PQ16",
     ):
         """
@@ -58,7 +57,7 @@ class FaissIndexBuilder:
             embedding_key (str, optional): Key to access the embeddings in the input files. If None, will require the input files to be in AnnData format and use the X field. Defaults to None.
             meta_key (str, optional): Key to access the metadata in the input files. Defaults to "cell_type".
             gpu (bool): Whether to use GPU acceleration. Defaults to False.
-            num_threads (int, optional): Number of threads to use for CPU parallelism. If None, will use all available cores. Defaults to None.
+            num_workers (int, optional): Number of threads to use for CPU parallelism. If None, will use all available cores. Defaults to None.
             index_desc (str, optional): Faiss index factory str, see [here](https://github.com/facebookresearch/faiss/wiki/The-index-factory) and [here](https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index#if-1m---10m-ivf65536_hnsw32). Defaults to "PCA64,IVF16384_HNSW32,PQ16".
         """
         self.embedding_dir = embedding_dir
@@ -70,15 +69,15 @@ class FaissIndexBuilder:
         self.embedding_key = embedding_key
         self.meta_key = meta_key
         self.gpu = gpu
-        self.num_threads = num_threads
+        self.num_workers = num_workers
         self.index_desc = index_desc
 
-        if self.num_threads is None:
+        if self.num_workers is None:
             try:
-                self.num_threads = len(os.sched_getaffinity(0))
-                print("Number of available cores: {}".format(self.num_threads))
+                self.num_workers = len(os.sched_getaffinity(0))
+                print("Number of available cores: {}".format(self.num_workers))
             except Exception:
-                self.num_threads = min(10, os.cpu_count())
+                self.num_workers = min(10, os.cpu_count())
 
         if self.meta_dir is None:  # metadata and embeddings are in the same file
             self.META_FROM_EMBEDDING = True
@@ -110,28 +109,9 @@ class FaissIndexBuilder:
             )
             embedding_files = [str(f) for f in embedding_files]
             embedding_files = sorted(embedding_files)
-            if self.num_threads > 1:
-                lock = threading.Lock()
-                with tqdm(
-                    total=len(embedding_files), desc="Loading embeddings and metalabels"
-                ) as pbar:
 
-                    def _load_embedding(file):
-                        adata = sc.read(file)
-                        embedding = adata.X
-                        meta_label = adata.obs[self.meta_key].values
-                        with lock:
-                            embeddings.append(embedding)
-                            meta_labels.append(meta_label)
-                            pbar.update(1)
-
-                    threads = []
-                    for file in embedding_files:
-                        thread = threading.Thread(target=_load_embedding, args=(file,))
-                        thread.start()
-                        threads.append(thread)
-                    for thread in threads:
-                        thread.join()
+            if self.num_workers > 1:
+                raise NotImplementedError
             else:
                 for file in tqdm(
                     embedding_files, desc="Loading embeddings and metalabels"
@@ -203,7 +183,7 @@ class FaissIndexBuilder:
                     "embedding_key": self.embedding_key,
                     "meta_key": self.meta_key,
                     "gpu": self.gpu,
-                    "num_threads": self.num_threads,
+                    "num_workers": self.num_workers,
                     "index_desc": self.index_desc,
                     "num_embeddings": embeddings.shape[0],
                     "num_features": embeddings.shape[1],
@@ -293,11 +273,11 @@ def _auto_set_nprobe(index: faiss.Index, nprobe: int = None) -> Optional[int]:
             nprobe
             if nprobe is not None
             else 16
-            if nlist <= 1e4
+            if nlist <= 1e3
             else 32
-            if nlist <= 8e4
+            if nlist <= 4e3
             else 64
-            if nlist <= 4e5
+            if nlist <= 1.6e4
             else 128
         )
         print(
@@ -309,10 +289,11 @@ def _auto_set_nprobe(index: faiss.Index, nprobe: int = None) -> Optional[int]:
 if __name__ == "__main__":
     # Set options
     embedding_dir = "/scratch/ssd004/datasets/cellxgene/embed/brain/"
+    output_dir = "/scratch/hdd001/home/haotian/projects/cellxemb/brain"
     embedding_file_suffix = ".h5ad"
     gpu = True
     index_desc = "PCA64,IVF16384_HNSW32,PQ16"
-    output_dir = "/scratch/hdd001/home/haotian/projects/cellxemb/brain"
+    num_workers = 1
 
     # Build index
     builder = FaissIndexBuilder(
@@ -320,7 +301,7 @@ if __name__ == "__main__":
         output_dir=output_dir,
         embedding_file_suffix=embedding_file_suffix,
         gpu=gpu,
+        num_workers=num_workers,
         index_desc=index_desc,
-        # num_threads=1,
     )
     index, meta_labels = builder.build_index()
