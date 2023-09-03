@@ -117,10 +117,14 @@ class FaissIndexBuilder:
                     embedding_files, desc="Loading embeddings and metalabels"
                 ):
                     adata = sc.read(file)
-                    embedding = adata.X
+                    # TODO: set the embedding_key according to self.embedding_key
+                    embedding = adata.X.astype(np.float32)
+                    if not isinstance(embedding, np.ndarray):
+                        embedding = embedding.toarray().astype(np.float32)
                     meta_label = adata.obs[self.meta_key].values
                     embeddings.append(embedding)
                     meta_labels.append(meta_label)
+                    del adata
         else:
             raise NotImplementedError
         embeddings = np.concatenate(embeddings, axis=0, dtype=np.float32)
@@ -288,8 +292,8 @@ def _auto_set_nprobe(index: faiss.Index, nprobe: int = None) -> Optional[int]:
 
 if __name__ == "__main__":
     # Set options
-    embedding_dir = "/scratch/ssd004/datasets/cellxgene/embed/brain/"
-    output_dir = "/scratch/hdd001/home/haotian/projects/cellxemb/brain"
+    embedding_dir = "/scratch/ssd004/datasets/cellxgene/embed/"
+    output_dir = "/scratch/hdd001/home/haotian/projects/cellxemb/all"
     embedding_file_suffix = ".h5ad"
     gpu = True
     index_desc = "PCA64,IVF16384_HNSW32,PQ16"
