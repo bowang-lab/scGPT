@@ -238,9 +238,9 @@ def load_index(
 
     print(f"Loading index and meta from {index_dir} ...")
     index = faiss.read_index(index_file)
-    with h5py.File(meta_file, "r") as f:
-        meta_labels = f["meta_labels"][:]
     print(f"Index loaded, num_embeddings: {index.ntotal}")
+    with h5py.File(meta_file, "r") as f:
+        meta_labels = f["meta_labels"].asstr()[:]
     if use_config_file:
         with open(index_config_file, "r") as f:
             config = json.load(f)
