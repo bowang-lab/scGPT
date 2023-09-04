@@ -21,6 +21,7 @@ scGPT works with Python >= 3.7 and R >=3.6.1. Please make sure you have the corr
 scGPT is available on PyPI. To install scGPT, run the following command:
 
 ```bash
+$ pip install "flash-attn<1.0.5"
 $ pip install scgpt
 ```
 
