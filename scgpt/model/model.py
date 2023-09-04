@@ -90,13 +90,13 @@ class TransformerModel(nn.Module):
         if use_batch_labels:
             self.batch_encoder = BatchLabelEncoder(num_batch_labels, d_model)
 
-        if domain_spec_batchnorm:
+        if domain_spec_batchnorm is True or domain_spec_batchnorm == "dsbn":
             use_affine = True if domain_spec_batchnorm == "do_affine" else False
             print(f"Use domain specific batchnorm with affine={use_affine}")
             self.dsbn = DomainSpecificBatchNorm1d(
                 d_model, num_batch_labels, eps=6.1e-5, affine=use_affine
             )
-        else:
+        elif domain_spec_batchnorm == "batchnorm":
             print("Using simple batchnorm instead of domain specific batchnorm")
             self.bn = nn.BatchNorm1d(d_model, eps=6.1e-5)
 
@@ -171,12 +171,12 @@ class TransformerModel(nn.Module):
         else:
             total_embs = src + values
 
-        if self.domain_spec_batchnorm:
+        if getattr(self, "dsbn", None) is not None:
             batch_label = int(batch_labels[0].item())
             total_embs = self.dsbn(total_embs.permute(0, 2, 1), batch_label).permute(
                 0, 2, 1
             )  # the batch norm always works on dim 1
-        else:
+        elif getattr(self, "bn", None) is not None:
             total_embs = self.bn(total_embs.permute(0, 2, 1)).permute(0, 2, 1)
 
         output = self.transformer_encoder(
@@ -263,12 +263,12 @@ class TransformerModel(nn.Module):
         else:
             total_embs = src
 
-        if self.domain_spec_batchnorm:
+        if getattr(self, "dsbn", None) is not None:
             batch_label = int(batch_labels[0].item())
             total_embs = self.dsbn(total_embs.permute(0, 2, 1), batch_label).permute(
                 0, 2, 1
             )  # the batch norm always works on dim 1
-        else:
+        elif getattr(self, "bn", None) is not None:
             total_embs = self.bn(total_embs.permute(0, 2, 1)).permute(0, 2, 1)
 
         total_embs[:, 0, :] = cell_emb
