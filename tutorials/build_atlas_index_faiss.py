@@ -290,10 +290,77 @@ def _auto_set_nprobe(index: faiss.Index, nprobe: int = None) -> Optional[int]:
         return index_ivf.nprobe
 
 
+def compute_category_proportion(meta_labels) -> Dict[str, float]:
+    """
+    Compute the proportion of each cell type in the meta_labels, which can be used for weighted voting in the search.
+
+    Args:
+        meta_labels (numpy.ndarray): A 1D array of cell type labels.
+
+    Returns:
+        dict: A dictionary containing the proportion of each cell type in the input array.
+    """
+    unique_labels, counts = np.unique(meta_labels, return_counts=True)
+    category_proportion = dict(zip(unique_labels, counts / counts.sum()))
+    return category_proportion
+
+
+def weighted_vote(
+    predicts_for_query, cell_type_proportion, return_prob=True
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Use the proportion of each cell type as the weight for voting.
+
+    Args:
+        predicts_for_query (numpy.ndarray): A 1D array of the predicted cell types for an individual query.
+        cell_type_proportion (dict): A dictionary containing the proportion of each cell type in the meta_labels.
+        return_prob (bool, optional): Whether to return the probability of each predicted cell type. Defaults to True.
+
+    Returns:
+        numpy.ndarray: A 1D array of the predicted cell types for the input query, weighted by the proportion of each cell type and sorted by the proportion.
+        numpy.ndarray: A 1D array of the probability of each predicted cell type. Only returned when return_prob is True.
+    """
+    unique_labels, counts = np.unique(predicts_for_query, return_counts=True)
+    weighted_counts = (
+        np.clip(counts - 0.01 * counts.sum(), 0, None)
+        * 1e-3
+        / np.array([cell_type_proportion[l] for l in unique_labels])
+    )  # the -1 is to reduce noise
+    weighted_counts = weighted_counts / weighted_counts.sum()
+    sorted_idx = np.argsort(weighted_counts)[::-1]
+    predicts_for_query = unique_labels[sorted_idx]
+
+    if return_prob:
+        return predicts_for_query, weighted_counts[sorted_idx]
+    return predicts_for_query
+
+
+def vote(predicts_for_query, return_prob=True) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Majority voting for the predicted cell types.
+
+    Args:
+        predicts_for_query (numpy.ndarray): A 1D array of the predicted cell types for an individual query.
+        return_prob (bool, optional): Whether to return the probability of each predicted cell type. Defaults to True.
+
+    Returns:
+        numpy.ndarray: A 1D array of the predicted cell types for the input query, weighted by the proportion of each cell type and sorted by the proportion.
+        numpy.ndarray: A 1D array of the probability of each predicted cell type. Only returned when return_prob is True.
+    """
+    unique_labels, counts = np.unique(predicts_for_query, return_counts=True)
+    weighted_counts = counts / counts.sum()
+    sorted_idx = np.argsort(weighted_counts)[::-1]
+    predicts_for_query = unique_labels[sorted_idx]
+
+    if return_prob:
+        return predicts_for_query, weighted_counts[sorted_idx]
+    return predicts_for_query
+
+
 if __name__ == "__main__":
     # Set options
-    embedding_dir = "/scratch/ssd004/datasets/cellxgene/embed/"
-    output_dir = "/scratch/hdd001/home/haotian/projects/cellxemb/all"
+    embedding_dir = "/scratch/hdd001/home/haotian/cellxgene_cencus_embed/"
+    output_dir = "/scratch/hdd001/home/haotian/projects/cellxemb/normal"
     embedding_file_suffix = ".h5ad"
     gpu = True
     index_desc = "PCA64,IVF16384_HNSW32,PQ16"
