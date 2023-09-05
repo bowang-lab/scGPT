@@ -7,11 +7,13 @@ import numpy as np
 import scanpy as sc
 import torch
 from anndata import AnnData
+from torch.utils.data import DataLoader, SequentialSampler
+from tqdm import tqdm
 
-from ..tokenizer import tokenize_and_pad_batch, GeneVocab
-from ..preprocess import Preprocessor
-from ..model import TransformerModel
 from .. import logger
+from ..data_collator import DataCollator
+from ..model import TransformerModel
+from ..tokenizer import GeneVocab
 
 PathLike = Union[str, os.PathLike]
 
@@ -32,16 +34,22 @@ def get_batch_cell_embeddings(
 
     Args:
         adata (AnnData): The AnnData object.
-        gene_embs (np.ndarray): The gene embeddings, shape (len(vocab), d_emb).
-        count_matrix (np.ndarray): The count matrix.
+        cell_embedding_mode (str): The mode to get the cell embeddings. Defaults to "cls".
+        model (TransformerModel, optional): The model. Defaults to None.
+        vocab (GeneVocab, optional): The vocabulary. Defaults to None.
+        max_length (int): The maximum length of the input sequence. Defaults to 1200.
+        batch_size (int): The batch size for inference. Defaults to 64.
+        model_configs (dict, optional): The model configurations. Defaults to None.
+        gene_ids (np.ndarray, optional): The gene vocabulary ids. Defaults to None.
+        use_batch_labels (bool): Whether to use batch labels. Defaults to False.
 
     Returns:
         np.ndarray: The cell embeddings.
     """
+
+    count_matrix = adata.X
     count_matrix = (
-        adata.layers["counts"]
-        if isinstance(adata.layers["counts"], np.ndarray)
-        else adata.layers["counts"].A
+        count_matrix if isinstance(count_matrix, np.ndarray) else count_matrix.A
     )
 
     # gene vocabulary ids
@@ -52,29 +60,82 @@ def get_batch_cell_embeddings(
     if use_batch_labels:
         batch_ids = np.array(adata.obs["batch_id"].tolist())
 
-    elif cell_embedding_mode == "cls":
-        tokenized_all = tokenize_and_pad_batch(
-            count_matrix,
-            gene_ids,
-            max_len=max_length,
-            vocab=vocab,
-            pad_token=model_configs["pad_token"],
-            pad_value=model_configs["pad_value"],
-            append_cls=True,  # append <cls> token at the beginning
-            include_zero_gene=False,
+    class Dataset(torch.utils.data.Dataset):
+        def __init__(self, count_matrix, gene_ids, batch_ids=None):
+            self.count_matrix = count_matrix
+            self.gene_ids = gene_ids
+            self.batch_ids = batch_ids
+
+        def __len__(self):
+            return len(self.count_matrix)
+
+        def __getitem__(self, idx):
+            row = self.count_matrix[idx]
+            nonzero_idx = np.nonzero(row)[0]
+            values = row[nonzero_idx]
+            genes = self.gene_ids[nonzero_idx]
+            # append <cls> token at the beginning
+            genes = np.insert(genes, 0, vocab["<cls>"])
+            values = np.insert(values, 0, model_configs["pad_value"])
+            genes = torch.from_numpy(genes).long()
+            values = torch.from_numpy(values)
+            output = {
+                "id": idx,
+                "genes": genes,
+                "expressions": values,
+            }
+            if self.batch_ids is not None:
+                output["batch_labels"] = self.batch_ids[idx]
+            return output
+
+    if cell_embedding_mode == "cls":
+        dataset = Dataset(
+            count_matrix, gene_ids, batch_ids if use_batch_labels else None
         )
-        all_gene_ids, all_values = tokenized_all["genes"], tokenized_all["values"]
-        src_key_padding_mask = all_gene_ids.eq(vocab[model_configs["pad_token"]])
+        collator = DataCollator(
+            do_padding=True,
+            pad_token_id=vocab[model_configs["pad_token"]],
+            pad_value=model_configs["pad_value"],
+            do_mlm=False,
+            do_binning=True,
+            max_length=max_length,
+            sampling=True,
+            keep_first_n_tokens=1,
+        )
+        data_loader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            sampler=SequentialSampler(dataset),
+            collate_fn=collator,
+            drop_last=False,
+            num_workers=min(len(os.sched_getaffinity(0)), batch_size),
+            pin_memory=True,
+        )
+
+        device = next(model.parameters()).device
+        cell_embeddings = np.zeros(
+            (len(dataset), model_configs["embsize"]), dtype=np.float32
+        )
         with torch.no_grad(), torch.cuda.amp.autocast(enabled=True):
-            cell_embeddings = model.encode_batch(
-                all_gene_ids,
-                all_values.float(),
-                src_key_padding_mask=src_key_padding_mask,
-                batch_size=batch_size,
-                batch_labels=None,
-                time_step=0,
-                return_np=True,
-            )
+            count = 0
+            for data_dict in tqdm(data_loader, desc="Embedding cells"):
+                input_gene_ids = data_dict["gene"].to(device)
+                src_key_padding_mask = input_gene_ids.eq(
+                    vocab[model_configs["pad_token"]]
+                )
+                embeddings = model._encode(
+                    input_gene_ids,
+                    data_dict["expr"].to(device),
+                    src_key_padding_mask=src_key_padding_mask,
+                    batch_labels=data_dict["batch_labels"].to(device)
+                    if use_batch_labels
+                    else None,
+                )
+
+                embeddings = embeddings[:, 0, :]  # get the <cls> position embedding
+                embeddings = embeddings.cpu().numpy()
+                cell_embeddings[count : count + len(embeddings)] = embeddings
+                count += len(embeddings)
         cell_embeddings = cell_embeddings / np.linalg.norm(
             cell_embeddings, axis=1, keepdims=True
         )
@@ -158,21 +219,7 @@ def embed_data(
     with open(model_config_file, "r") as f:
         model_configs = json.load(f)
 
-    # Preprocessing
-    preprocessor = Preprocessor(
-        use_key="X",  # the key in adata.layers to use as raw data
-        filter_gene_by_counts=False,  # step 1
-        filter_cell_by_counts=False,  # step 2
-        normalize_total=1e4,  # 3. whether to normalize the raw data and to what sum
-        result_normed_key="X_normed",  # the key in adata.layers to store the normalized data
-        log1p=False,  # 4. whether to log1p the normalized data
-        result_log1p_key="X_log1p",
-        subset_hvg=False,
-        # hvg_flavor="seurat_v3",
-        binning=51,  # 6. whether to bin the raw data and to what number of bins
-        result_binned_key="counts",  # the key in adata.layers to store the binned data
-    )
-    preprocessor(adata, batch_key=None)
+    # Binning will be applied after tokenization. A possible way to do is to use the unified way of binning in the data collator.
 
     vocab.set_default_index(vocab["<pad>"])
     genes = adata.var[gene_col].tolist()

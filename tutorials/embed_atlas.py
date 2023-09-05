@@ -57,7 +57,7 @@ adata = scg.tasks.embed_data(
     cell_type_key="cell_type",
     gene_col="feature_name",
     max_length=1200,
-    batch_size=128,
+    batch_size=1024,
     obs_to_save=[
         "soma_joinid",
         "dataset_id",
