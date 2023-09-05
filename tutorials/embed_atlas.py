@@ -4,9 +4,22 @@ import sys
 from pathlib import Path
 
 import scanpy as sc
+import wandb
 
 sys.path.insert(0, "../")
 import scgpt as scg
+
+run = wandb.init(
+    config={
+        "id": 0,
+        "seed": 42,
+    },
+    project="scGPT_emed_atlas",
+    reinit=True,
+    settings=wandb.Settings(start_method="fork"),
+)
+print("config:", wandb.config)
+scg.utils.set_seed(wandb.config.seed)
 
 model_dir = Path("../save/scGPT_human")
 atlas_name = "cellxgene_cencus"
@@ -46,7 +59,7 @@ else:
             writer.writerow([str(file), tissue, str(embed_file)])
 
 # embed one file
-id = 0
+id = wandb.config.id
 anndata_file = anndata_files[id]
 embed_file = embed_files[id]
 print(f"Embedding {anndata_file} to {embed_file}")
