@@ -1,9 +1,0 @@
-program: embed_atlas.py
-method: grid
-parameters:
-  id:
-    distribution: int_uniform
-    min: 0
-    max: 210
-name: embed_atlas
-project: scGPT_emed_atlas
