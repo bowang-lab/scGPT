@@ -2,11 +2,11 @@
 
 This is the official codebase for **scGPT: Towards Building a Foundation Model for Single-Cell Multi-omics Using Generative AI**.
 
-[Preprint](https://www.biorxiv.org/content/10.1101/2023.04.30.538439)
-
-[Documentation](https://scgpt.readthedocs.io/en/latest/)
+[Preprint](https://www.biorxiv.org/content/10.1101/2023.04.30.538439) [Documentation](https://scgpt.readthedocs.io/en/latest/)
 
 **!UPDATE**: We have released several new pretrained scGPT checkpoints. Please see the [Pretrained scGPT checkpoints](#pretrained-scGPT-checkpoints) section for more details.
+
+**[2023.09.05]** We have release a new feature for reference mapping samples to a custom reference dataset or to all the millions of cells collected from CellXGene! With the help of the [faiss](https://github.com/facebookresearch/faiss) library, we achieved a great time and memory efficiency. The index of over 33 millions cells only takes less than 1GB of memory and the similarity search takes less than **1 second for 10,000 query cells on GPU**. Please see the [Reference mapping tutorial](https://github.com/bowang-lab/scGPT/blob/main/tutorials/Tutorial_Reference_Mapping.ipynb) for more details.
 
 ### Online apps
 
@@ -69,7 +69,7 @@ Please see our example code in [examples/finetune_integration.py](examples/finet
 - [x] Documentation website with readthedocs
 - [ ] Bump up to pytorch 2.0
 - [x] New pretraining on larger datasets
-- [ ] Reference mapping example
+- [x] Reference mapping example
 - [ ] Publish to huggingface model hub
 
 ## Contributing
