@@ -9,6 +9,7 @@ Modules
 
    scgpt.model
    scgpt.scbank
+   scgpt.tasks
    scgpt.tokenizer
    scgpt.utils
 
