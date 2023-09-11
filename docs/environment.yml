@@ -30,6 +30,7 @@ dependencies:
       - typing-extensions==4.2.0
       - umap-learn==0.5.3
       - sphinx<7.0
+      - orbax<0.1.8
       - ipykernel
       - nbsphinx
       - git+https://github.com/vidartf/nbsphinx-link.git
