@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from scformer.tokenizer import GeneVocab, random_mask_value
+from scgpt.tokenizer import GeneVocab, random_mask_value
 import sys
 from datasets import Dataset, load_dataset
 import os
@@ -269,6 +269,7 @@ else:
     args.pad_value = -2
     n_input_bins = args.n_bins
 
+
 def _map_append_cls(dataset: Dataset) -> Dataset:
     dataset = dataset.map(
         lambda example: {
@@ -292,7 +293,6 @@ for s in special_tokens:
         vocab.append_token(s)
 
 
-
 # load or make the dataset w/ <cls> appended at the beginning
 cls_prefix_datatable = Path(args.data_source) / "cls_prefix_data.parquet"
 if not cls_prefix_datatable.exists():
@@ -301,7 +301,8 @@ if not cls_prefix_datatable.exists():
         "parquet",
         data_files=parquet_files,
         split="train",
-        cache_dir=str(cache_dir),)
+        cache_dir=str(cache_dir),
+    )
     raw_dataset = _map_append_cls(raw_dataset)
     raw_dataset.to_parquet(str(cls_prefix_datatable))
 raw_dataset = load_dataset(
