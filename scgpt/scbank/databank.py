@@ -8,7 +8,6 @@ import numpy as np
 from scipy.sparse import spmatrix, csr_matrix
 from anndata import AnnData
 from datasets import Dataset, load_dataset
-from scvi import settings
 
 from scgpt.tokenizer import GeneVocab
 from .data import DataTable, MetaInfo

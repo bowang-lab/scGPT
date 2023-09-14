@@ -158,7 +158,7 @@ python-versions = ">=3.5"
 name = "atomicwrites"
 version = "1.4.0"
 description = "Atomic file writes."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -531,6 +531,31 @@ description = "An implementation of lxml.xmlfile for the standard library"
 category = "main"
 optional = false
 python-versions = ">=3.6"
+
+[[package]]
+name = "etils"
+version = "0.9.0"
+description = "Collection of common python utils"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+all = ["etils[array-types]", "etils[eapp]", "etils[ecolab]", "etils[edc]", "etils[enp]", "etils[epath]", "etils[epy]", "etils[etqdm]", "etils[etree-dm]", "etils[etree-jax]", "etils[etree-tf]", "etils[etree]"]
+array-types = ["etils[enp]"]
+dev = ["chex", "pylint (>=2.6.0)", "pytest", "pytest-subtests", "pytest-xdist", "yapf"]
+eapp = ["absl-py", "simple_parsing"]
+ecolab = ["etils[enp]", "etils[epy]", "jupyter", "mediapy", "numpy"]
+edc = ["etils[epy]", "typing_extensions"]
+enp = ["etils[epy]", "numpy"]
+epath = ["etils[epy]", "importlib_resources", "typing_extensions", "zipp"]
+epy = ["typing_extensions"]
+etqdm = ["absl-py", "etils[epy]", "tqdm"]
+etree = ["etils[array_types]", "etils[enp]", "etils[epy]", "etils[etqdm]"]
+etree-dm = ["dm-tree", "etils[etree]"]
+etree-jax = ["etils[etree]", "jax[cpu]"]
+etree-tf = ["etils[etree]", "tf-nightly"]
+lazy-imports = ["etils[ecolab]"]
 
 [[package]]
 name = "fastjsonschema"
@@ -1240,7 +1265,7 @@ python-versions = "*"
 name = "more-itertools"
 version = "8.13.0"
 description = "More routines for operating on iterables, beyond itertools"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.5"
 
@@ -1572,6 +1597,30 @@ numpy = ">=1.18.0"
 typing-extensions = ">=3.10.0"
 
 [[package]]
+name = "orbax"
+version = "0.1.0"
+description = "Orbax"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+absl-py = "*"
+cached_property = "*"
+etils = "*"
+flax = "*"
+importlib_resources = "*"
+jax = "*"
+jaxlib = "*"
+numpy = "*"
+pytest = "*"
+pyyaml = "*"
+tensorstore = ">=0.1.20"
+
+[package.extras]
+dev = ["pytest-xdist"]
+
+[[package]]
 name = "packaging"
 version = "21.3"
 description = "Core utilities for Python packages"
@@ -1712,7 +1761,7 @@ tenacity = ">=6.2.0"
 name = "pluggy"
 version = "0.13.1"
 description = "plugin and hook calling mechanisms for python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -1931,7 +1980,7 @@ python-versions = ">=3.7"
 name = "pytest"
 version = "5.4.3"
 description = "pytest: simple powerful testing with Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.5"
 
@@ -2616,6 +2665,17 @@ tensorflow-gpu = ["tensorflow-gpu (>=2.9.0,<2.10.0)"]
 tensorflow-rocm = ["tensorflow-rocm (>=2.9.0,<2.10.0)"]
 
 [[package]]
+name = "tensorstore"
+version = "0.1.28"
+description = "Read and write large, multi-dimensional arrays"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+numpy = ">=1.16.0"
+
+[[package]]
 name = "termcolor"
 version = "1.1.0"
 description = "ANSII Color formatting for output in terminal."
@@ -3079,7 +3139,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.13,<3.11"
-content-hash = "db5defb9399c241fa31cdcf16bd146a8d8792e120aca451d581e2e9954b19aa2"
+content-hash = "b160ee414fd912b6d7095cb1cfd1df52cea8482337d68d533f68bee6899c5bea"
 
 [metadata.files]
 absl-py = [
@@ -3459,6 +3519,10 @@ entrypoints = [
 et-xmlfile = [
     {file = "et_xmlfile-1.1.0-py3-none-any.whl", hash = "sha256:a2ba85d1d6a74ef63837eed693bcb89c3f752169b0e3e7ae5b16ca5e1b3deada"},
     {file = "et_xmlfile-1.1.0.tar.gz", hash = "sha256:8eb9e2bc2f8c97e37a2dc85a09ecdcdec9d8a396530a6d5a33b30b9a92da0c5c"},
+]
+etils = [
+    {file = "etils-0.9.0-py3-none-any.whl", hash = "sha256:635d6f7d1c519eb194304228543a4c5c7df0e6b58243302473e34c18cf720588"},
+    {file = "etils-0.9.0.tar.gz", hash = "sha256:489103e9e499a566765c60458ee15d185cf0065f2060a4d16a68f8f46962ed0d"},
 ]
 fastjsonschema = [
     {file = "fastjsonschema-2.15.3-py3-none-any.whl", hash = "sha256:ddb0b1d8243e6e3abb822bd14e447a89f4ab7439342912d590444831fa00b6a0"},
@@ -4321,6 +4385,10 @@ optax = [
     {file = "optax-0.1.2-py3-none-any.whl", hash = "sha256:4e3cb24b70e87acd65700da77c570c468e701d32a2393ae4a5ec35719d90ade6"},
     {file = "optax-0.1.2.tar.gz", hash = "sha256:c2963ffa3b3ac47f72c2866625207c9468558ed18e6e471baac69d4de2ac3f58"},
 ]
+orbax = [
+    {file = "orbax-0.1.0-py3-none-any.whl", hash = "sha256:df2b5534cb379e1c72a8829bbb62a2c7ebc0e06567ad98e4b06e6aced5d231b1"},
+    {file = "orbax-0.1.0.tar.gz", hash = "sha256:317fae101b504dfea9204d667fd79ad7039395b123356995e13a01332e996595"},
+]
 packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},
     {file = "packaging-21.3.tar.gz", hash = "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb"},
@@ -5139,6 +5207,24 @@ tensorflow-io-gcs-filesystem = [
     {file = "tensorflow_io_gcs_filesystem-0.26.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:c71438e6459f52462b95f98ab17b20cd1a269a1efe837e4df426a0b79359f3b7"},
     {file = "tensorflow_io_gcs_filesystem-0.26.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bd285595afe03740553710ccdbd1397d69a8e48d758c731c0de1f1c5a71a9fe5"},
     {file = "tensorflow_io_gcs_filesystem-0.26.0-cp39-cp39-win_amd64.whl", hash = "sha256:2940b4ab6848ef5ec34dc3c140b5ae9eba0da13453da839c30ebe3461a6eb51d"},
+]
+tensorstore = [
+    {file = "tensorstore-0.1.28-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:deb32f1e74ab7b836ecec02a759a558fc57522a8dea0db4f19a01a78e93abab5"},
+    {file = "tensorstore-0.1.28-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:bd8615308ad3e29111238dfdd3aca1f3fb79b55c3dac1c04c96c8a319985addf"},
+    {file = "tensorstore-0.1.28-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ee16297a9493ed0d6d1000f216e79d29a0b80e7e97646e8520afd44138165839"},
+    {file = "tensorstore-0.1.28-cp310-cp310-win_amd64.whl", hash = "sha256:b6f7e0c7455d9e164e6143714519e7c96cc4166b61ed7d268a8ab84a77e0d593"},
+    {file = "tensorstore-0.1.28-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:1c53e1e0e7996b8ba41854135d748c2bc8802b94a79122b56448aeb1f77efd9f"},
+    {file = "tensorstore-0.1.28-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6bd122a44db81369808c84b7739ad2d8453f89c548c5d61d62f2b1f3331dbe9f"},
+    {file = "tensorstore-0.1.28-cp37-cp37m-win_amd64.whl", hash = "sha256:197159da3ee97c08d8769fa151ff167328108bf07a13886f688b21f64abfb7d6"},
+    {file = "tensorstore-0.1.28-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:e480da4f95f7c95302c4b3e2a7fc32b8cfe1aa51742d72f84a335e49462a2465"},
+    {file = "tensorstore-0.1.28-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:7948ead0d5a55303ffa97a35659aa56a20c60bd89d9487643f51ac8d2e19b52c"},
+    {file = "tensorstore-0.1.28-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:818aeb015b249069a686fb20f0c0b71663410ac6411cee88df18b8e05b567cbc"},
+    {file = "tensorstore-0.1.28-cp38-cp38-win_amd64.whl", hash = "sha256:6719eaba4ec2692d890c3c67c389fcae073d40d9e8c27e2dabd27fc9fd745e5c"},
+    {file = "tensorstore-0.1.28-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:d7c86f63a6d4d7a84e3201ba9746ca51015612d375d77b9302eb93e9b88bc7aa"},
+    {file = "tensorstore-0.1.28-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:dc82cbb77255fd2f7aa191f1e030f13276bf7272ea1027fcc6900537b30bfbcb"},
+    {file = "tensorstore-0.1.28-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c4de09e3fae30f8a9ab7648600c78e109ddd1d14af4280e055439fdd52a6dca9"},
+    {file = "tensorstore-0.1.28-cp39-cp39-win_amd64.whl", hash = "sha256:f9270586401ee60ff79a4cd54c62ab5b06831d69b561df1fb9ebbeade4d4929c"},
+    {file = "tensorstore-0.1.28.tar.gz", hash = "sha256:cd8d8185136632c58edcd7cf4c43d301bf8ad61a197c632cb495d7d33b7be04e"},
 ]
 termcolor = [
     {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},
