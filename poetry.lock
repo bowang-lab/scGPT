@@ -268,7 +268,7 @@ python-versions = "~=3.5"
 name = "cell-gears"
 version = "0.0.1"
 description = "GEARS"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -3139,7 +3139,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.13,<3.11"
-content-hash = "b160ee414fd912b6d7095cb1cfd1df52cea8482337d68d533f68bee6899c5bea"
+content-hash = "e51e7125aab5034f8a8c6c7f27c9f22e7fbdef7591b2c97441ff5f2abb39795e"
 
 [metadata.files]
 absl-py = [

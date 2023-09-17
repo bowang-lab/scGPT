@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scGPT"
-version = "0.1.6"
+version = "0.1.7"
 description = "Large-scale generative pretrain of single cell using transformer."
 license = "MIT"
 authors = ["Haotian <subercui@gmail.com>"]
@@ -25,6 +25,7 @@ datasets = "^2.3.0"
 typing-extensions = "^4.2.0"
 scib = "^1.0.3"
 flash-attn = "^1.0.1"
+cell-gears = "<0.0.3"
 orbax = "<0.1.8"
 
 [tool.poetry.dev-dependencies]
@@ -32,7 +33,6 @@ pytest = "^5.2"
 black = "^22.3.0"
 tensorflow = "^2.8.0"
 torch-geometric = "2.3.0"
-cell-gears = "^0.0.1"
 dcor = "~0.5.3"
 wandb = "^0.12.3"
 plotly = "^5.3.1"
