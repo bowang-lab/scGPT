@@ -107,7 +107,10 @@ class Preprocessor:
             )
 
         # step 2: filter cells
-        if isinstance(self.filter_cell_by_counts, int):
+        if (
+            isinstance(self.filter_cell_by_counts, int)
+            and self.filter_cell_by_counts > 0
+        ):
             logger.info("Filtering cells by counts ...")
             sc.pp.filter_cells(
                 adata,
