@@ -19,19 +19,21 @@ scGPT is now available at the following online apps as well, so you can get star
 
 ## Installation
 
-scGPT works with Python >= 3.7 and R >=3.6.1. Please make sure you have the correct version of Python and R installed pre-installation.
+scGPT works with Python >= 3.7.13 and R >=3.6.1. Please make sure you have the correct version of Python and R installed pre-installation.
 
 scGPT is available on PyPI. To install scGPT, run the following command:
 
 ```bash
-$ pip install "flash-attn<1.0.5"
-$ pip install scgpt
+pip install torch==1.13.0
+pip install scgpt "flash-attn<1.0.5"
+# As of 2023.09, pip install may not run with new versions of the google orbax package, if you encounter related issues, please use the following command instead:
+# pip install scgpt "flash-attn<1.0.5" "orbax<0.1.8"
 ```
 
 [Optional] We recommend using [wandb](https://wandb.ai/) for logging and visualization.
 
 ```bash
-$ pip install wandb
+pip install wandb
 ```
 
 For developing, we are using the [Poetry](https://python-poetry.org/) package manager. To install Poetry, follow the instructions [here](https://python-poetry.org/docs/#installation).

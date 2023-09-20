@@ -14,12 +14,9 @@ import os
 import scanpy as sc
 
 import sys
-#sys.path.append("/scratch/ssd004/datasets/cellxgene/scFormer")
-sys.path.append("/home/march/PycharmProjects/scGPT_LiuWuhao/scFormer")
 
-
-#import scformer as scf
-import scgpt as scf
+sys.path.insert(0, "../../")
+import scgpt as scg
 from scgpt import scbank
 
 # %%
@@ -58,7 +55,7 @@ parser.add_argument(
     type=str,
     default=None,
     help="File containing the gene vocabulary, default to None. If None, will "
-    "use the default gene vocabulary from scFormer, which use HGNC gene symbols.",
+    "use the default gene vocabulary from scGPT, which use HGNC gene symbols.",
 )
 
 parser.add_argument(
@@ -69,7 +66,7 @@ parser.add_argument(
 )
 
 
-# if scf.utils.isnotebook():
+# if scg.utils.isnotebook():
 #     args = parser.parse_args(
 #         [
 #             "--input-dir",
@@ -81,7 +78,7 @@ parser.add_argument(
 #             "--metainfo",
 #             "./metainfo.json",
 #             "--vocab-file",
-#             "../../scformer/tokenizer/default_cellxgene_vocab.json",
+#             "../../scgpt/tokenizer/default_cellxgene_vocab.json",
 #         ]
 #     )
 # else:
@@ -92,7 +89,7 @@ python build_large_scale_data.py \
     --input-dir ./datasets/ \
     --output-dir ./databanks/ \
     --metainfo ./metainfo.json \
-    --vocab-file ../../scformer/tokenizer/default_cellxgene_vocab.json
+    --vocab-file ../../scgpt/tokenizer/default_cellxgene_vocab.json
 """
 
 # %%
@@ -104,7 +101,6 @@ files = [f for f in input_dir.glob("*.h5ad")]
 print(f"Found {len(files)} files in {input_dir}")
 if args.include_files is not None:
     files = [f for f in files if f.name in args.include_files]
-"""
 if args.metainfo is not None:
     metainfo = json.load(open(args.metainfo))
     files = [f for f in files if f.stem in metainfo]
@@ -113,25 +109,11 @@ if args.metainfo is not None:
         for f in files
         if "include_disease" in metainfo[f.stem]
     }
-"""
-
-if args.metainfo is not None:
-    with open(args.metainfo, 'r') as f:
-        metainfo = json.load(f)
-    #metainfo = json.load(open(args.metainfo))
-    files = [f for f in files if f.stem in metainfo]
-    include_obs = {
-        f.stem: {"disease": metainfo[f.stem]["include_disease"]}
-        for f in files
-        if "include_disease" in metainfo[f.stem]
-    }
-
-
 
 if args.vocab_file is None:
-    vocab = scf.tokenizer.get_default_gene_vocab()
+    vocab = scg.tokenizer.get_default_gene_vocab()
 else:
-    vocab = scf.tokenizer.GeneVocab.from_file(args.vocab_file)
+    vocab = scg.tokenizer.GeneVocab.from_file(args.vocab_file)
 
 # %% [markdown]
 # # preprocessing data
@@ -141,7 +123,7 @@ def preprocess(
     adata: sc.AnnData,
     main_table_key: str = "counts",
     include_obs: Optional[Dict[str, List[str]]] = None,
-    N = 10000
+    N=10000,
 ) -> sc.AnnData:
     """
     Preprocess the data for scBank. This function will modify the AnnData object in place.
@@ -198,10 +180,7 @@ token_col = "feature_name"
 for f in files:
     try:
         adata = sc.read(f, cache=True)
-        adata = preprocess(
-            adata, main_table_key, 
-            N = args.N
-        )
+        adata = preprocess(adata, main_table_key, N=args.N)
         print(f"read {adata.shape} valid data from {f.name}")
 
         # TODO: CHECK AND EXPAND VOCABULARY IF NEEDED

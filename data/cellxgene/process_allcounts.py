@@ -1,7 +1,6 @@
 import argparse
 from pathlib import Path
-#from scformer.tokenizer import GeneVocab, random_mask_value
-from scgpt.tokenizer import GeneVocab,random_mask_value
+from scgpt.tokenizer import GeneVocab, random_mask_value
 import sys
 from datasets import Dataset, load_dataset
 import os
