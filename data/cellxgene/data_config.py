@@ -2,7 +2,8 @@
 
 
 MAJOR_TISSUE_LIST  = ["heart", "blood", "brain", "lung", "kidney", "intestine", "pancreas"]
-VERSION = "2023-05-08"
+#VERSION = "2023-05-08"
+VERSION = "2023-05-15"
 
 CANCER_LIST_PATH = "./cancer_list.txt"
 with open(CANCER_LIST_PATH) as f:

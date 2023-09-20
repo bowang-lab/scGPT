@@ -24,7 +24,7 @@ parser.add_argument("--partition-idx",
 parser.add_argument("--output-dir",
     type=str,
     required=True,
-    help="Directory to store the output h4ad file",
+    help="Directory to store the output h5ad file",
 )
 
 parser.add_argument("--index-dir",

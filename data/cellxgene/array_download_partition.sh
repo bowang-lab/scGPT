@@ -8,14 +8,16 @@
 
 
 
-INDEX_PATH="path/to/index"
-QUERY_PATH="path/to/query"
-DATA_PATH="path/to/data"
+INDEX_PATH="/home/march/PycharmProjects/scGPT_LiuWuhao/data/index"
+QUERY_PATH="/home/march/PycharmProjects/scGPT_LiuWuhao/data/query/query_list.txt"
+DATA_PATH="/home/march/PycharmProjects/scGPT_LiuWuhao/data/scgpt_data/"
 
 cd $DATA_PATH
 
-query_name=$(sed -n "${SLURM_ARRAY_TASK_ID}p" $QUERY_PATH)
-
+#query_name=$(sed -n "${SLURM_ARRAY_TASK_ID}p" $QUERY_PATH)
+query_name=$(sed -n 1 $QUERY_PATH)
+query_name
 echo "downloading ${query_name}"
 
 ./download_partition.sh ${query_name} ${INDEX_PATH} ${DATA_PATH}
+#./download_partition.sh

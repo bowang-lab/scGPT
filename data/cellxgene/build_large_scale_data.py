@@ -14,11 +14,13 @@ import os
 import scanpy as sc
 
 import sys
-sys.path.append("/scratch/ssd004/datasets/cellxgene/scFormer")
+#sys.path.append("/scratch/ssd004/datasets/cellxgene/scFormer")
+sys.path.append("/home/march/PycharmProjects/scGPT_LiuWuhao/scFormer")
 
 
-import scformer as scf
-from scformer import scbank
+#import scformer as scf
+import scgpt as scf
+from scgpt import scbank
 
 # %%
 parser = argparse.ArgumentParser(
@@ -102,6 +104,7 @@ files = [f for f in input_dir.glob("*.h5ad")]
 print(f"Found {len(files)} files in {input_dir}")
 if args.include_files is not None:
     files = [f for f in files if f.name in args.include_files]
+"""
 if args.metainfo is not None:
     metainfo = json.load(open(args.metainfo))
     files = [f for f in files if f.stem in metainfo]
@@ -110,6 +113,20 @@ if args.metainfo is not None:
         for f in files
         if "include_disease" in metainfo[f.stem]
     }
+"""
+
+if args.metainfo is not None:
+    with open(args.metainfo, 'r') as f:
+        metainfo = json.load(f)
+    #metainfo = json.load(open(args.metainfo))
+    files = [f for f in files if f.stem in metainfo]
+    include_obs = {
+        f.stem: {"disease": metainfo[f.stem]["include_disease"]}
+        for f in files
+        if "include_disease" in metainfo[f.stem]
+    }
+
+
 
 if args.vocab_file is None:
     vocab = scf.tokenizer.get_default_gene_vocab()
