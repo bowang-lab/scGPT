@@ -15,9 +15,10 @@ DATA_PATH="/home/march/PycharmProjects/scGPT_LiuWuhao/data/scgpt_data/"
 cd $DATA_PATH
 
 #query_name=$(sed -n "${SLURM_ARRAY_TASK_ID}p" $QUERY_PATH)
-query_name=$(sed -n 1 $QUERY_PATH)
-query_name
+query_name=$(sed -n '3p' $QUERY_PATH)
+#query_name
 echo "downloading ${query_name}"
 
+cd /home/march/PycharmProjects/scGPT_LiuWuhao/data/cellxgene/
 ./download_partition.sh ${query_name} ${INDEX_PATH} ${DATA_PATH}
 #./download_partition.sh
