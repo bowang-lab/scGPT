@@ -256,6 +256,8 @@ def tokenize_batch(
     append_cls: bool = True,
     include_zero_gene: bool = False,
     cls_id: int = "<cls>",
+    mod_type: np.ndarray = None,
+    cls_id_mod_type: int = None,
 ) -> List[Tuple[Union[torch.Tensor, np.ndarray]]]:
     """
     Tokenize a batch of data. Returns a list of tuple (gene_id, count).
@@ -275,23 +277,38 @@ def tokenize_batch(
             f"Number of features in data ({data.shape[1]}) does not match "
             f"number of gene_ids ({len(gene_ids)})."
         )
+    if mod_type is not None and data.shape[1] != len(mod_type):
+        raise ValueError(
+            f"Number of features in data ({data.shape[1]}) does not match "
+            f"number of mod_type ({len(mod_type)})."
+        )
+
     tokenized_data = []
     for i in range(len(data)):
         row = data[i]
+        mod_types = None
         if include_zero_gene:
             values = row
             genes = gene_ids
+            if mod_type is not None:
+                mod_types = mod_type
         else:
             idx = np.nonzero(row)[0]
             values = row[idx]
             genes = gene_ids[idx]
+            if mod_type is not None:
+                mod_types = mod_type[idx]
         if append_cls:
             genes = np.insert(genes, 0, cls_id)
             values = np.insert(values, 0, 0)
+            if mod_type is not None:
+                mod_types = np.insert(mod_types, 0, cls_id_mod_type)
         if return_pt:
             genes = torch.from_numpy(genes).long()
-            values = torch.from_numpy(values)
-        tokenized_data.append((genes, values))
+            values = torch.from_numpy(values).float()
+            if mod_type is not None:
+                mod_types = torch.from_numpy(mod_types).long()
+        tokenized_data.append((genes, values, mod_types))
     return tokenized_data
 
 
@@ -302,6 +319,7 @@ def pad_batch(
     pad_token: str = "<pad>",
     pad_value: int = 0,
     cls_appended: bool = True,
+    vocab_mod: Vocab = None,
 ) -> Dict[str, torch.Tensor]:
     """
     Pad a batch of data. Returns a list of Dict[gene_id, count].
@@ -315,11 +333,19 @@ def pad_batch(
     Returns:
         Dict[str, torch.Tensor]: A dictionary of gene_id and count.
     """
+    max_ori_len = max(len(batch[i][0]) for i in range(len(batch)))
+    max_len = min(max_ori_len, max_len)
+
     pad_id = vocab[pad_token]
+    if vocab_mod is not None:
+        mod_pad_id = vocab_mod[pad_token]
     gene_ids_list = []
     values_list = []
+    mod_types_list = []
+
     for i in range(len(batch)):
-        gene_ids, values = batch[i]
+        gene_ids, values, mod_types = batch[i]
+
         if len(gene_ids) > max_len:
             # sample max_len genes
             if not cls_appended:
@@ -330,6 +356,8 @@ def pad_batch(
                 idx = np.insert(idx, 0, 0)
             gene_ids = gene_ids[idx]
             values = values[idx]
+            if mod_types is not None:
+                mod_types = mod_types[idx]
         if len(gene_ids) < max_len:
             gene_ids = torch.cat(
                 [
@@ -345,12 +373,29 @@ def pad_batch(
                     torch.full((max_len - len(values),), pad_value, dtype=values.dtype),
                 ]
             )
+            if mod_types is not None:
+                mod_types = torch.cat(
+                    [
+                        mod_types,
+                        torch.full(
+                            (max_len - len(mod_types),),
+                            mod_pad_id,
+                            dtype=mod_types.dtype,
+                        ),
+                    ]
+                )
+
         gene_ids_list.append(gene_ids)
         values_list.append(values)
+        if mod_types is not None:
+            mod_types_list.append(mod_types)
+
     batch_padded = {
         "genes": torch.stack(gene_ids_list, dim=0),
         "values": torch.stack(values_list, dim=0),
     }
+    if mod_types is not None:
+        batch_padded["mod_types"] = torch.stack(mod_types_list, dim=0)
     return batch_padded
 
 
@@ -365,11 +410,15 @@ def tokenize_and_pad_batch(
     include_zero_gene: bool = False,
     cls_token: str = "<cls>",
     return_pt: bool = True,
+    mod_type: np.ndarray = None,
+    vocab_mod: Vocab = None,
 ) -> Dict[str, torch.Tensor]:
     """
     Tokenize and pad a batch of data. Returns a list of tuple (gene_id, count).
     """
     cls_id = vocab[cls_token]
+    if mod_type is not None:
+        cls_id_mod_type = vocab_mod[cls_token]
     tokenized_data = tokenize_batch(
         data,
         gene_ids,
@@ -377,9 +426,18 @@ def tokenize_and_pad_batch(
         append_cls=append_cls,
         include_zero_gene=include_zero_gene,
         cls_id=cls_id,
+        mod_type=mod_type,
+        cls_id_mod_type=cls_id_mod_type if mod_type is not None else None,
     )
+
     batch_padded = pad_batch(
-        tokenized_data, max_len, vocab, pad_token, pad_value, cls_appended=append_cls
+        tokenized_data,
+        max_len,
+        vocab,
+        pad_token,
+        pad_value,
+        cls_appended=append_cls,
+        vocab_mod=vocab_mod,
     )
     return batch_padded
 
