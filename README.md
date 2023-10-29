@@ -46,6 +46,37 @@ $ poetry install
 
 **Note**: The `flash-attn` dependency usually requires specific GPU and CUDA version. If you encounter any issues, please refer to the [flash-attn](https://github.com/HazyResearch/flash-attention/tree/main) repository for installation instructions. For now, May 2023, we recommend using CUDA 11.7 and flash-attn<1.0.5 due to various issues reported about installing new versions of flash-attn.
 
+## Using the Docker Image for scGPT
+
+By using the `scGPT Docker image`, you can bypass the complexities of manual package installation, ensuring a consistent deployment environment. Included in this repository is a Dockerfile that lets you craft a container for the project; you have the choice to either build this image on your own or conveniently pull it from Docker Hub.
+
+### Building the Docker Image
+
+To build the Docker image from the provided `Dockerfile`, run the following command from the root directory of this repository:
+
+```bash
+docker build -t scgpt:latest -f Dockerfile .
+```
+
+### Pulling the Docker Image from Docker Hub
+
+If you don't want to build the image yourself, you can pull it directly from Docker Hub:
+
+```bash
+docker pull xueerchen/scgpt:0.1.7
+docker tag xueerchen/scgpt:0.1.7 scgpt:latest
+```
+
+### Running the Docker Container
+
+Once you have the image (either by building it or pulling it), you can start a container with:
+
+```bash
+docker run --gpus all --rm -it scgpt:latest bash
+```
+
+Please note: When running the Docker container, ensure you mount any necessary folders using the -v option to access them inside the container.
+
 ## Pretrained scGPT Model Zoo
 
 Here is the list of pretrained models. Please find the links for downloading the checkpoint folders. We recommend using the `whole-human` model for most applications by default. If your fine-tuning dataset shares similar cell type context with the training data of the organ-specific models, these models can usually demonstrate competitive performance as well.
