@@ -180,7 +180,20 @@ class Preprocessor:
             bin_edges = []
             layer_data = _get_obs_rep(adata, layer=key_to_process)
             layer_data = layer_data.A if issparse(layer_data) else layer_data
+            if layer_data.min() < 0:
+                raise ValueError(
+                    f"Assuming non-negative data, but got min value {layer_data.min()}."
+                )
             for row in layer_data:
+                if row.max() == 0:
+                    logger.warning(
+                        "The input data contains all zero rows. Please make sure "
+                        "this is expected. You can use the `filter_cell_by_counts` "
+                        "arg to filter out all zero rows."
+                    )
+                    binned_rows.append(np.zeros_like(row, dtype=np.int64))
+                    bin_edges.append(np.array([0] * n_bins))
+                    continue
                 non_zero_ids = row.nonzero()
                 non_zero_row = row[non_zero_ids]
                 bins = np.quantile(non_zero_row, np.linspace(0, 1, n_bins - 1))
