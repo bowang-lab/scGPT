@@ -24,7 +24,9 @@ To download data from CellXGene and build for pretraining, go to the folder [cel
 
 ## Datasets for multi-omics integration
 
-Will upload soon.
+- BMMC dataset: [link](https://drive.google.com/drive/folders/1VRsVugg6vgCq8GG0gGajYsyXfrEtP0jK?usp=sharing)
+
+- 10x Multiome PBMC dataset: [link](https://drive.google.com/drive/folders/163J4Qi7R-awuLiHnWCh-eJD7RPMnb_yK?usp=sharing)
 
 ## Datasets for perturbation prediction
 
