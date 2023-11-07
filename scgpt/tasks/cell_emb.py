@@ -14,6 +14,7 @@ from .. import logger
 from ..data_collator import DataCollator
 from ..model import TransformerModel
 from ..tokenizer import GeneVocab
+from ..utils import load_pretrained
 
 PathLike = Union[str, os.PathLike]
 
@@ -153,6 +154,7 @@ def embed_data(
     batch_size=64,
     obs_to_save: Optional[list] = None,
     device: Union[str, torch.device] = "cuda",
+    use_fast_transformer: bool = True,
     return_new_adata: bool = False,
 ) -> AnnData:
     """
@@ -170,6 +172,7 @@ def embed_data(
         obs_to_save (Optional[list]): The list of obs columns to save in the output adata.
             If None, will only keep the column of :attr:`cell_type_key`. Defaults to None.
         device (Union[str, torch.device]): The device to use. Defaults to "cuda".
+        use_fast_transformer (bool): Whether to use flash-attn. Defaults to True.
         return_new_adata (bool): Whether to return a new AnnData object. If False, will
             add the cell embeddings to a new :attr:`adata.obsm` with key "X_scGPT".
 
@@ -246,26 +249,13 @@ def embed_data(
         do_mvc=True,
         do_dab=False,
         use_batch_labels=False,
-        # num_batch_labels=num_batch_types,
         domain_spec_batchnorm=False,
         explicit_zero_prob=False,
-        use_fast_transformer=True,
+        use_fast_transformer=use_fast_transformer,
         fast_transformer_backend="flash",
         pre_norm=False,
     )
-
-    try:
-        model.load_state_dict(torch.load(model_file, map_location=device))
-    except:
-        model_dict = model.state_dict()
-        pretrained_dict = torch.load(model_file)
-        pretrained_dict = {
-            k: v
-            for k, v in pretrained_dict.items()
-            if k in model_dict and v.shape == model_dict[k].shape
-        }
-        model_dict.update(pretrained_dict)
-        model.load_state_dict(model_dict)
+    load_pretrained(model, torch.load(model_file), verbose=False)
     model.to(device)
     model.eval()
 

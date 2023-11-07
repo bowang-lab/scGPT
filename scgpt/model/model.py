@@ -13,10 +13,13 @@ from tqdm import trange
 
 try:
     from flash_attn.flash_attention import FlashMHA
+
+    flash_attn_available = True
 except ImportError:
     import warnings
 
     warnings.warn("flash_attn is not installed")
+    flash_attn_available = False
 
 from .dsbn import DomainSpecificBatchNorm1d
 from .grad_reverse import grad_reverse
@@ -69,6 +72,15 @@ class TransformerModel(nn.Module):
             )
         if cell_emb_style not in ["cls", "avg-pool", "w-pool"]:
             raise ValueError(f"Unknown cell_emb_style: {cell_emb_style}")
+        if use_fast_transformer:
+            if not flash_attn_available:
+                warnings.warn(
+                    "flash-attn is not installed, using pytorch transformer instead. "
+                    "Set use_fast_transformer=False to avoid this warning. "
+                    "Installing flash-attn is highly recommended."
+                )
+                use_fast_transformer = False
+        self.use_fast_transformer = use_fast_transformer
 
         # TODO: add dropout in the GeneEncoder
         self.encoder = GeneEncoder(ntoken, d_model, padding_idx=vocab[pad_token])

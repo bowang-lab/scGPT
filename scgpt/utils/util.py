@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import random
 import subprocess
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Mapping, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -299,6 +299,66 @@ def map_raw_id_to_vocab_id(
     if return_pt:
         return torch.from_numpy(mapped_ids).type(dtype).to(device)
     return mapped_ids.astype(dtype)
+
+
+def load_pretrained(
+    model: torch.nn.Module,
+    pretrained_params: Mapping[str, torch.Tensor],
+    strict: bool = False,
+    prefix: Optional[List[str]] = None,
+    verbose: bool = True,
+) -> torch.nn.Module:
+    """
+    Load pretrained weights to the model.
+
+    Args:
+        model (torch.nn.Module): The model to load weights to.
+        pretrained_params (Mapping[str, torch.Tensor]): The pretrained parameters.
+        strict (bool): Whether to strictly enforce that the keys in :attr:`pretrained_params`
+            match the keys returned by this module's :meth:`Module.state_dict`. Default to False.
+        prefix (List[str]): The list of prefix strings to match with the keys in
+            :attr:`pretrained_params`. The matched keys will be loaded. Default to None.
+
+    Returns:
+        torch.nn.Module: The model with pretrained weights.
+    """
+
+    use_flash_attn = getattr(model, "use_fast_transformer", True)
+    if not use_flash_attn:
+        pretrained_params = {
+            k.replace("Wqkv.", "in_proj_"): v for k, v in pretrained_params.items()
+        }
+
+    if prefix is not None and len(prefix) > 0:
+        if isinstance(prefix, str):
+            prefix = [prefix]
+        pretrained_params = {
+            k: v
+            for k, v in pretrained_params.items()
+            if any(k.startswith(p) for p in prefix)
+        }
+
+    model_dict = model.state_dict()
+    if strict:
+        if verbose:
+            for k, v in pretrained_params.items():
+                logger.info(f"Loading parameter {k} with shape {v.shape}")
+        model_dict.update(pretrained_params)
+        model.load_state_dict(model_dict)
+    else:
+        if verbose:
+            for k, v in pretrained_params.items():
+                if k in model_dict and v.shape == model_dict[k].shape:
+                    logger.info(f"Loading parameter {k} with shape {v.shape}")
+        pretrained_params = {
+            k: v
+            for k, v in pretrained_params.items()
+            if k in model_dict and v.shape == model_dict[k].shape
+        }
+        model_dict.update(pretrained_params)
+        model.load_state_dict(model_dict)
+
+    return model
 
 
 # Wrapper for all scib metrics, we leave out some metrics like hvg_score, cell_cyvle,
