@@ -9,6 +9,8 @@ This is the official codebase for **scGPT: Towards Building a Foundation Model f
 
 **!UPDATE**: We have released several new pretrained scGPT checkpoints. Please see the [Pretrained scGPT checkpoints](#pretrained-scGPT-checkpoints) section for more details.
 
+**[2023.11.07]** As requested by many, now we have made flash-attention an optional dependency. The pretrained weights can be loaded on pytorch CPU, GPU, and flash-attn backends using the same [load_pretrained](https://github.com/bowang-lab/scGPT/blob/f6097112fe5175cd4e221890ed2e2b1815f54010/scgpt/utils/util.py#L304) function, `load_pretrained(target_model, torch.load("path_to_ckpt.pt"))`. An example usage is also [here](https://github.com/bowang-lab/scGPT/blob/f6097112fe5175cd4e221890ed2e2b1815f54010/scgpt/tasks/cell_emb.py#L258).
+
 **[2023.09.05]** We have release a new feature for reference mapping samples to a custom reference dataset or to all the millions of cells collected from CellXGene! With the help of the [faiss](https://github.com/facebookresearch/faiss) library, we achieved a great time and memory efficiency. The index of over 33 millions cells only takes less than 1GB of memory and the similarity search takes less than **1 second for 10,000 query cells on GPU**. Please see the [Reference mapping tutorial](https://github.com/bowang-lab/scGPT/blob/main/tutorials/Tutorial_Reference_Mapping.ipynb) for more details.
 
 ### Online apps
@@ -25,7 +27,7 @@ scGPT is available on PyPI. To install scGPT, run the following command:
 
 ```bash
 pip install torch==1.13.0
-pip install scgpt "flash-attn<1.0.5"
+pip install scgpt "flash-attn<1.0.5"  # optional, recommended
 # As of 2023.09, pip install may not run with new versions of the google orbax package, if you encounter related issues, please use the following command instead:
 # pip install scgpt "flash-attn<1.0.5" "orbax<0.1.8"
 ```
