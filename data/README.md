@@ -37,3 +37,18 @@ To download data from CellXGene and build for pretraining, go to the folder [cel
 ## Datasets for the GRN analysis
 
 - Immune Human dataset [link](https://figshare.com/ndownloader/files/25717328)
+
+## Datasets for zero-shot integration
+
+- Lung-Kim dataset: [link](https://drive.google.com/file/d/1z_0vWYMhRuRiD1EyhuFtY9ReIR0msWaL/view?usp=sharing)
+
+- COVID-19 dataset: [link](https://drive.google.com/file/d/1eD9LbxNJ35YUde3VtdVcjkwm-f4iyJ6x/view?usp=drive_link)
+
+- Multiple Sclerosis (M.S.) dataset: [link](https://drive.google.com/drive/folders/1Qd42YNabzyr2pWt9xoY4cVMTAxsNBt4v?usp=sharing)
+
+
+## Datasets for zero-shot integration
+
+- COVID-19 dataset(splitted) : [link](https://drive.google.com/drive/folders/1jSPoPunGQOmd71vDsK0FS7UvmDhGdhQS?usp=sharing)
+
+- Lung-Kim dataset(splitted): [link](https://drive.google.com/drive/folders/1gbfO7VqxCOkfzgHAih6hO88zFv6pd8wO?usp=sharing)
