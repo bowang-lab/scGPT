@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scGPT"
-version = "0.1.9"
+version = "0.1.10"
 description = "Large-scale generative pretrain of single cell using transformer."
 license = "MIT"
 authors = ["Haotian <subercui@gmail.com>"]
