@@ -641,6 +641,11 @@ class FlashTransformerEncoderLayer(nn.Module):
             attention_dropout=dropout,
             **factory_kwargs,
         )
+        # Version compatibility workaround
+        try:
+            self.self_attn.batch_first
+        except AttributeError:
+            self.self_attn.batch_first = batch_first
         # Implementation of Feedforward model
         self.linear1 = nn.Linear(d_model, dim_feedforward, **factory_kwargs)
         self.dropout = nn.Dropout(dropout)
