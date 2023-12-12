@@ -642,9 +642,7 @@ class FlashTransformerEncoderLayer(nn.Module):
             **factory_kwargs,
         )
         # Version compatibility workaround
-        try:
-            self.self_attn.batch_first
-        except AttributeError:
+        if not hasattr(self.self_attn, "batch_first"):
             self.self_attn.batch_first = batch_first
         # Implementation of Feedforward model
         self.linear1 = nn.Linear(d_model, dim_feedforward, **factory_kwargs)
