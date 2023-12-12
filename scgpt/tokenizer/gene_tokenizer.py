@@ -10,14 +10,11 @@ import pandas as pd
 import torch
 import torchtext.vocab as torch_vocab
 from torchtext.vocab import Vocab
-from transformers.tokenization_utils import PreTrainedTokenizer
-from transformers import AutoTokenizer, BertTokenizer
+
+# from transformers.tokenization_utils import PreTrainedTokenizer
+# from transformers import AutoTokenizer, BertTokenizer
 
 from .. import logger
-
-
-class GeneTokenizer(PreTrainedTokenizer):
-    pass
 
 
 class GeneVocab(Vocab):
