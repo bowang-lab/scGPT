@@ -16,7 +16,6 @@ from scgpt.loss import (
     criterion_neg_log_bernoulli,
 )
 from scgpt.utils import eval_scib_metrics
-import wandb
 import warnings
 from scipy.sparse import issparse
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -189,6 +188,7 @@ def train(
     """
     Train the model for one epoch.
     """
+    import wandb
 
     model.train()
     total_loss, total_gep, total_cls, total_gepc, total_ecs, total_dab = (
@@ -370,6 +370,8 @@ def train(
 
 
 def define_wandb_metrcis():
+    import wandb
+
     wandb.define_metric("valid/loss", summary="min", step_metric="epoch")
     wandb.define_metric("test/avg_bio", summary="max")
 
@@ -388,6 +390,8 @@ def evaluate(
     """
     Evaluate the model on the evaluation data.
     """
+    import wandb
+
     model.eval()
     total_loss = 0.0
     # total_error = 0.0
