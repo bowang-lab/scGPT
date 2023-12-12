@@ -17,7 +17,7 @@ This is the official codebase for **scGPT: Towards Building a Foundation Model f
 
 scGPT is now available at the following online apps as well, so you can get started simply with your browser!
 
-- Run the [cell annotation app](https://app.superbio.ai/apps/274?id=64d205cb980ff714de831ee0) and the [GRN inference app](https://app.superbio.ai/apps/270?id=64b804fb823bc93b64c10a76) with cloud gpus. Thanks to the [Superbio.ai](https://app.superbio.ai/) team for helping create and host the interactive tools.
+- Run the [reference mapping app](https://app.superbio.ai/apps/299?id=6548f339a9ed6f6e5560b07d), [cell annotation app](https://app.superbio.ai/apps/274?id=64d205cb980ff714de831ee0) and the [GRN inference app](https://app.superbio.ai/apps/270?id=64b804fb823bc93b64c10a76) with cloud gpus. Thanks to the [Superbio.ai](https://app.superbio.ai/) team for helping create and host the interactive tools.
 
 ## Installation
 
