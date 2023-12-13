@@ -79,7 +79,7 @@ def get_batch_cell_embeddings(
             genes = np.insert(genes, 0, vocab["<cls>"])
             values = np.insert(values, 0, model_configs["pad_value"])
             genes = torch.from_numpy(genes).long()
-            values = torch.from_numpy(values)
+            values = torch.from_numpy(values).float()
             output = {
                 "id": idx,
                 "genes": genes,

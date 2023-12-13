@@ -280,6 +280,16 @@ def binning(
     row = row.cpu().numpy() if isinstance(row, torch.Tensor) else row
     # TODO: use torch.quantile and torch.bucketize
 
+    if row.max() == 0:
+        logger.warning(
+            "The input data contains row of zeros. Please make sure this is expected."
+        )
+        return (
+            np.zeros_like(row, dtype=dtype)
+            if return_np
+            else torch.zeros_like(row, dtype=dtype)
+        )
+
     if row.min() <= 0:
         non_zero_ids = row.nonzero()
         non_zero_row = row[non_zero_ids]
