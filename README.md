@@ -26,7 +26,6 @@ scGPT works with Python >= 3.7.13 and R >=3.6.1. Please make sure you have the c
 scGPT is available on PyPI. To install scGPT, run the following command:
 
 ```bash
-pip install torch==1.13.0
 pip install scgpt "flash-attn<1.0.5"  # optional, recommended
 # As of 2023.09, pip install may not run with new versions of the google orbax package, if you encounter related issues, please use the following command instead:
 # pip install scgpt "flash-attn<1.0.5" "orbax<0.1.8"
@@ -74,7 +73,7 @@ Please see our example code in [examples/finetune_integration.py](examples/finet
 - [ ] Finetuning examples for multi-omics integration, cell type annotation, perturbation prediction, cell generation
 - [x] Example code for Gene Regulatory Network analysis
 - [x] Documentation website with readthedocs
-- [ ] Bump up to pytorch 2.0
+- [x] Bump up to pytorch 2.0
 - [x] New pretraining on larger datasets
 - [x] Reference mapping example
 - [ ] Publish to huggingface model hub
