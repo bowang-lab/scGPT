@@ -255,7 +255,7 @@ def embed_data(
         fast_transformer_backend="flash",
         pre_norm=False,
     )
-    load_pretrained(model, torch.load(model_file), verbose=False)
+    load_pretrained(model, torch.load(model_file, map_location=device), verbose=False)
     model.to(device)
     model.eval()
 
