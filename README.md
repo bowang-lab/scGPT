@@ -30,10 +30,18 @@ scGPT works with Python >= 3.7.13 and R >=3.6.1. Please make sure you have the c
 scGPT is available on PyPI. To install scGPT, run the following command:
 
 ```bash
-pip install scgpt "flash-attn<1.0.5"  # optional, recommended
+pip install scgpt ninja packaging && FLASH_ATTENTION_SKIP_CUDA_BUILD=TRUE pip install flash-attn --no-build-isolation  # optional, recommended
 # As of 2023.09, pip install may not run with new versions of the google orbax package, if you encounter related issues, please use the following command instead:
-# pip install scgpt "flash-attn<1.0.5" "orbax<0.1.8"
+# pip install scgpt ninja packaging "orbax<0.1.8" && FLASH_ATTENTION_SKIP_CUDA_BUILD=TRUE pip install flash-attn --no-build-isolation
 ```
+
+**Note**: 
+The `flash-attn` dependency requires `CUDA >= 11.6, PyTorch >= 1.12, Linux`.
+If you encounter any issues, please refer to the [flash-attn](https://github.com/HazyResearch/flash-attention/tree/main) repository for installation instructions. 
+For now, ~~May 2023, we recommend using CUDA 11.7 and flash-attn<1.0.5 due to various issues reported about installing new versions of flash-attn.~~
+we are using the latest flash-attn2, but please be aware that depends on the gpu architecture,
+Ampere, Ada, or Hopper GPUs (e.g., A100, RTX 3090, RTX 4090, H100) are tested and supported, however,
+Turing GPUs (T4, RTX 2080) are not supported in flash-attn2 but in flash-attn 1.x
 
 [Optional] We recommend using [wandb](https://wandb.ai/) for logging and visualization.
 
@@ -48,8 +56,6 @@ $ git clone this-repo-url
 $ cd scGPT
 $ poetry install
 ```
-
-**Note**: The `flash-attn` dependency usually requires specific GPU and CUDA version. If you encounter any issues, please refer to the [flash-attn](https://github.com/HazyResearch/flash-attention/tree/main) repository for installation instructions. For now, May 2023, we recommend using CUDA 11.7 and flash-attn<1.0.5 due to various issues reported about installing new versions of flash-attn.
 
 ## Pretrained scGPT Model Zoo
 
