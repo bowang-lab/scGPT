@@ -638,7 +638,7 @@ class FlashTransformerEncoderLayer(nn.Module):
             embed_dim=d_model,
             num_heads=nhead,
             dropout=dropout,
-            use_flash_attn=True,
+            use_flash_attn=False,
             **factory_kwargs,
         )
         # Version compatibility workaround
