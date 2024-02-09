@@ -213,6 +213,7 @@ class FlashscGPTLayer(nn.Module):
         >>> src = torch.rand(32, 10, 512)
         >>> out = encoder_layer(src)
     """
+
     __constants__ = ["batch_first"]
 
     def __init__(
@@ -371,6 +372,7 @@ class FlashscGPTGenerator(nn.Module):
         >>> src = torch.rand(10, 32, 512)
         >>> out = transformer_encoder(src)
     """
+
     __constants__ = ["norm"]
 
     def __init__(

@@ -12,50 +12,113 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 from torch.distributions import Bernoulli
 from tqdm import trange
 
-try:
-    from flash_attn.flash_attention import FlashMHA
-    from .flash_layers import FlashscGPTLayer, FlashscGPTGenerator
-except ImportError:
-    import warnings
+from flash_attn.flash_attention import FlashMHA
+from .flash_layers import FlashscGPTLayer, FlashscGPTGenerator
 
-    warnings.warn("flash_attn is not installed")
 
 from .dsbn import DomainSpecificBatchNorm1d
 from .grad_reverse import grad_reverse
+from transformers import PreTrainedModel, PretrainedConfig
 
 
-class TransformerModel(nn.Module):
+class scGPT_config(PretrainedConfig):
+    model_type = "scGPT"
+
     def __init__(
         self,
-        ntoken: int,
-        d_model: int,
-        nhead: int,
-        d_hid: int,
-        nlayers: int,
-        nlayers_cls: int = 3,
-        n_cls: int = 1,
-        padding_idx: Any = None,
-        dropout: float = 0.5,
-        pad_token: str = "<pad>",
-        pad_value: int = 0,
-        do_mvc: bool = False,
-        do_dab: bool = False,
-        use_batch_labels: bool = False,
-        num_batch_labels: Optional[int] = None,
-        domain_spec_batchnorm: Union[bool, str] = False,
-        input_emb_style: str = "continuous",
-        n_input_bins: Optional[int] = None,
-        cell_emb_style: str = "cls",
-        mvc_decoder_style: str = "inner product",
-        ecs_threshold: float = 0.3,
-        explicit_zero_prob: bool = False,
-        use_generative_training=False,
-        use_fast_transformer: bool = False,
-        fast_transformer_backend: str = "flash",
-        pre_norm: bool = False,
-        use_sim_decoder: bool = False,
+        vocab_size=50000,
+        d_hid=512,
+        n_embd=768,
+        n_layer=12,
+        n_head=12,
+        dropout=0.1,
+        attention_probs_dropout_prob=0.1,
+        initializer_range=0.02,
+        pad_value=-2,
+        mask_value=-1,
+        use_mod=False,
+        use_batch_labels=False,
+        DSBN=False,
+        CLS=False,
+        GEPC=False,
+        ESC=False,
+        n_bins=51,
+        padding_idx=0,
+        do_mvc=False,
+        do_dab=False,
+        num_batch_labels=None,
+        domain_spec_batchnorm=False,
+        ecs_threshold=0.3,
+        explicit_zero_prob=False,
+        use_generative_training=True,
+        use_fast_transformer=True,
+        fast_transformer_backend="flash",
+        use_sim_decoder=False,
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
+        self.vocab_size = vocab_size
+        self.d_hid = d_hid
+        self.n_embd = n_embd
+        self.n_layer = n_layer
+        self.n_head = n_head
+        self.dropout = dropout
+        self.attention_probs_dropout_prob = attention_probs_dropout_prob
+        self.initializer_range = initializer_range
+        self.use_mod = use_mod
+        self.use_batch_labels = use_batch_labels
+        self.num_batch_labels = num_batch_labels
+        self.DSBN = DSBN
+        self.CLS = CLS
+        self.GEPC = GEPC
+        self.ESC = ESC
+        self.pad_value = pad_value
+        self.mask_value = mask_value
+        self.n_bins = n_bins
+        self.padding_idx = padding_idx
+        self.do_mvc = do_mvc
+        self.do_dab = do_dab
+        self.domain_spec_batchnorm = domain_spec_batchnorm
+        self.ecs_threshold = ecs_threshold
+        self.explicit_zero_prob = explicit_zero_prob
+        self.use_generative_training = use_generative_training
+        self.use_fast_transformer = use_fast_transformer
+        self.fast_transformer_backend = fast_transformer_backend
+        self.use_sim_decoder = use_sim_decoder
+
+
+class scGPT_ForPretraining(PreTrainedModel):
+    def __init__(
+        self,
+        config: scGPT_config,
+    ):
+        super().__init__(config)
+        ntoken = config.vocab_size
+        d_model = config.n_embd
+        nhead = config.n_head
+        d_hid = config.d_hid
+        nlayers = config.n_layer
+        padding_idx = config.padding_idx
+        dropout = config.dropout
+        pad_value = config.pad_value
+        do_mvc = config.do_mvc
+        do_dab = config.do_dab
+        use_batch_labels = config.use_batch_labels
+        num_batch_labels = config.num_batch_labels
+        domain_spec_batchnorm = config.domain_spec_batchnorm
+        n_input_bins = config.n_bins
+        ecs_threshold = config.ecs_threshold
+        explicit_zero_prob = config.explicit_zero_prob
+        use_generative_training = config.use_generative_training
+        use_fast_transformer = config.use_fast_transformer
+        fast_transformer_backend = config.fast_transformer_backend
+        use_sim_decoder = config.use_sim_decoder
+        pad_token = "<pad>"
+        input_emb_style = "continuous"
+        cell_emb_style = "cls"
+        mvc_decoder_style = "inner product"
+        pre_norm = False
+
         self.model_type = "Transformer"
         self.d_model = d_model
         self.do_dab = do_dab
@@ -143,11 +206,11 @@ class TransformerModel(nn.Module):
             use_batch_labels=use_batch_labels,
         )
 
-        if n_cls > 1:
-            if use_sim_decoder:
-                self.cls_decoder = SimDecoder(d_model, n_cls, nlayers=nlayers_cls)
-            else:
-                self.cls_decoder = ClsDecoder(d_model, n_cls, nlayers=nlayers_cls)
+        # if n_cls > 1:
+        #     if use_sim_decoder:
+        #         self.cls_decoder = SimDecoder(d_model, n_cls, nlayers=nlayers_cls)
+        #     else:
+        #         self.cls_decoder = ClsDecoder(d_model, n_cls, nlayers=nlayers_cls)
 
         if do_mvc:
             self.mvc_decoder = MVCDecoder(
@@ -792,6 +855,7 @@ class FlashTransformerEncoderLayer(nn.Module):
         >>> src = torch.rand(32, 10, 512)
         >>> out = encoder_layer(src)
     """
+
     __constants__ = ["batch_first"]
 
     def __init__(
@@ -1268,3 +1332,10 @@ class AdversarialDiscriminator(nn.Module):
         for layer in self._decoder:
             x = layer(x)
         return self.out_layer(x)
+
+
+if __name__ == "__main__":
+    config = scGPT_config()
+    model = scGPT_ForPretraining(config)
+    print(model)
+    # model = scGPT_ForSequenceClassification(config)
