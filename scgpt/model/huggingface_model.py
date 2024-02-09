@@ -28,6 +28,17 @@ class scGPT_config(PretrainedConfig):
         GEPC=False,
         ESC=False,
         n_bins=51,
+        padding_idx=0,
+        do_mvc=False,
+        do_dab=False,
+        num_batch_labels=None,
+        domain_spec_batchnorm=False,
+        ecs_threshold=0.3,
+        explicit_zero_prob=False,
+        use_generative_training=True,
+        use_fast_transformer=True,
+        fast_transformer_backend="flash",
+        use_sim_decoder=False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -41,6 +52,7 @@ class scGPT_config(PretrainedConfig):
         self.initializer_range = initializer_range
         self.use_mod = use_mod
         self.use_batch_labels = use_batch_labels
+        self.num_batch_labels = num_batch_labels
         self.DSBN = DSBN
         self.CLS = CLS
         self.GEPC = GEPC
@@ -48,7 +60,16 @@ class scGPT_config(PretrainedConfig):
         self.pad_value = pad_value
         self.mask_value = mask_value
         self.n_bins = n_bins
-
+        self.padding_idx = padding_idx
+        self.do_mvc = do_mvc
+        self.do_dab = do_dab
+        self.domain_spec_batchnorm = domain_spec_batchnorm
+        self.ecs_threshold = ecs_threshold
+        self.explicit_zero_prob = explicit_zero_prob
+        self.use_generative_training = use_generative_training
+        self.use_fast_transformer = use_fast_transformer
+        self.fast_transformer_backend = fast_transformer_backend
+        self.use_sim_decoder = use_sim_decoder
 
 class scGPT_ForPretraining(PreTrainedModel):
     config_class = scGPT_config
@@ -61,27 +82,27 @@ class scGPT_ForPretraining(PreTrainedModel):
             nhead=config.n_head,
             d_hid=config.d_hid,
             nlayers=config.n_layer,
-            n_cls=1,
-            padding_idx=0,  # TODO: check if this is correct
+            padding_idx=config.padding_idx,
             dropout=config.dropout,
-            pad_token="<pad>",
             pad_value=config.pad_value,
-            do_mvc=False,
-            do_dab=False,
-            use_batch_labels=False,
-            num_batch_labels=None,
-            domain_spec_batchnorm=False,
-            input_emb_style="continuous",
+            do_mvc=self.do_mvc,
+            do_dab=self.do_dab,
+            use_batch_labels=self.use_batch_labels,
+            num_batch_labels=self.num_batch_labels,
+            domain_spec_batchnorm=self.domain_spec_batchnorm,
             n_input_bins=config.n_bins,
+            ecs_threshold=config.ecs_threshold,
+            explicit_zero_prob=config.explicit_zero_prob,
+            use_generative_training=config.use_generative_training,
+            use_fast_transformer=config.use_fast_transformer,
+            fast_transformer_backend=config.fast_transformer_backend,
+            use_sim_decoder=config.self.use_sim_decoder,
+            n_cls=1,
+            pad_token="<pad>",
+            input_emb_style="continuous",
             cell_emb_style="cls",
             mvc_decoder_style="inner product",
-            ecs_threshold=0.3,
-            explicit_zero_prob=False,
-            use_generative_training=True,
-            use_fast_transformer=True,
-            fast_transformer_backend="flash",
             pre_norm=False,
-            use_sim_decoder=False,
         )
         self.criterion = masked_mse_loss
 
