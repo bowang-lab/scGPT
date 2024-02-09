@@ -34,7 +34,7 @@ class TransformerModel(nn.Module):
         nlayers: int,
         nlayers_cls: int = 3,
         n_cls: int = 1,
-        vocab: Any = None,
+        padding_idx: Any = None,
         dropout: float = 0.5,
         pad_token: str = "<pad>",
         pad_value: int = 0,
@@ -75,7 +75,7 @@ class TransformerModel(nn.Module):
             raise ValueError(f"Unknown cell_emb_style: {cell_emb_style}")
 
         # TODO: add dropout in the GeneEncoder
-        self.encoder = GeneEncoder(ntoken, d_model, padding_idx=vocab[pad_token])
+        self.encoder = GeneEncoder(ntoken, d_model, padding_idx=padding_idx)
         self.flag_encoder = nn.Embedding(2, d_model)
 
         # Value Encoder, NOTE: the scaling style is also handled in _encode method
