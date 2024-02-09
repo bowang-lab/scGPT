@@ -19,6 +19,21 @@ from .flash_layers import FlashscGPTLayer, FlashscGPTGenerator
 from .dsbn import DomainSpecificBatchNorm1d
 from .grad_reverse import grad_reverse
 from transformers import PreTrainedModel, PretrainedConfig
+from transformers.file_utils import ModelOutput
+
+from dataclasses import dataclass
+
+
+@dataclass
+class scGPT_ModelOutput(ModelOutput):
+    cell_emb: Optional[Tensor] = None
+    pred: Optional[Tensor] = None
+    cls_output: Optional[Tensor] = None
+    mvc_output: Optional[Tensor] = None
+    ecs_output: Optional[Tensor] = None
+    dab_output: Optional[Tensor] = None
+    loss_ecs: Optional[Tensor] = None
+    mvc_zero_probs: Optional[Tensor] = None
 
 
 class scGPT_config(PretrainedConfig):
@@ -495,7 +510,7 @@ class scGPT_ForPretraining(PreTrainedModel):
         self,
         *args,
         **kwargs,
-    ) -> Mapping[str, Tensor]:
+    ) -> scGPT_ModelOutput:
         """
         Wrapper to call either generative_forward or perceptual_forward, depending
         on the value of the "generative_training" kwarg.
@@ -511,9 +526,11 @@ class scGPT_ForPretraining(PreTrainedModel):
         # get the generative training flag and pop it out
         do_generative_training = kwargs.pop("generative_training")
         if do_generative_training:
-            return self.generative_forward(*args, **kwargs)
+            model_output = self.generative_forward(*args, **kwargs)
+            return scGPT_ModelOutput(**model_output)
         else:
-            return self.perceptual_forward(*args, **kwargs)
+            model_output = self.perceptual_forward(*args, **kwargs)
+            return scGPT_ModelOutput(**model_output)
 
     def generative_forward(
         self,
@@ -1334,8 +1351,3 @@ class AdversarialDiscriminator(nn.Module):
         return self.out_layer(x)
 
 
-if __name__ == "__main__":
-    config = scGPT_config()
-    model = scGPT_ForPretraining(config)
-    print(model)
-    # model = scGPT_ForSequenceClassification(config)
