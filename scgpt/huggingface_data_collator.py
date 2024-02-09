@@ -1,8 +1,7 @@
-from transformers import DataCollatorForLanguageModeling, PreTrainedTokenizerBase
+from transformers import DefaultDataCollator
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
-
 import torch
 import numpy as np
 import sys
@@ -10,7 +9,7 @@ import sys
 sys.path.insert(0, "../")
 from scgpt.preprocess import binning
 
-class scGPT_DataCollator(DataCollatorForLanguageModeling):
+class scGPT_DataCollator(DefaultDataCollator):
     """
     Data collator for the mask value learning task. It pads the sequences to
     the maximum length in the batch and masks the gene expression values.
@@ -43,39 +42,16 @@ class scGPT_DataCollator(DataCollatorForLanguageModeling):
             training setting. If "both", the output will contain both fields above.
             Choices: "pcpt", "gen", "both". Default to "pcpt".
     """
-    tokenizer: PreTrainedTokenizerBase
-    mlm: bool = True
-    mlm_probability: float = 0.15
-    pad_to_multiple_of: Optional[int] = None
-    tf_experimental_compile: bool = False
     return_tensors: str = "pt"
-    
-    do_padding: bool = True
-    pad_token_id: int = 0
-    pad_value: int = 0
-    do_mlm: bool = True
-    do_binning: bool = True
-    mask_value: int = -1
-    max_length: int = 512
-    sampling: bool = True
-    #reserve_keys: List[str] = field(default_factory=lambda: [])
-    reserve_keys: List[str] = []
-    keep_first_n_tokens: int = 1
-    data_style: str = "pcpt"
     
     def __init__(
         self,
-        tokenizer: PreTrainedTokenizerBase,
-        mlm: bool = True,
-        mlm_probability: float = 0.15,
-        pad_to_multiple_of: Optional[int] = None,
-        tf_experimental_compile: bool = False,
-        return_tensors: str = "pt",
         do_padding: bool = True,
         pad_token_id: Optional[int] = None,
         pad_value: int = 0,
         do_mlm: bool = True,
         do_binning: bool = True,
+        mlm_probability: float = 0.15,
         mask_value: int = -1,
         max_length: Optional[int] = None,
         sampling: bool = True,
@@ -84,17 +60,11 @@ class scGPT_DataCollator(DataCollatorForLanguageModeling):
         keep_first_n_tokens: int = 1,
         data_style: str = "pcpt",
     ):
-        super().__init__(tokenizer, 
-                         mlm=mlm, 
-                         mlm_probability=mlm_probability, 
-                         pad_to_multiple_of=pad_to_multiple_of, 
-                         tf_experimental_compile=tf_experimental_compile,
-                         return_tensors=return_tensors,
-                        )
         self.do_padding = do_padding
         self.pad_token_id = pad_token_id
         self.pad_value = pad_value
         self.do_mlm = do_mlm 
+        self.mlm_probability = mlm_probability
         self.do_binning = do_binning
         self.mask_value = mask_value
         self.max_length = max_length
