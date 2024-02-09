@@ -14,8 +14,9 @@ if not logger.hasHandlers() or len(logger.handlers) == 0:
     )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+# print(f"scGPT version {__version__}")
 
-from . import model, tokenizer, scbank, utils, tasks
+from . import model, tokenizer, scbank, utils, tasks, huggingface_model
 from .data_collator import DataCollator
 from .data_sampler import SubsetsBatchSampler
 from .trainer import (
