@@ -27,13 +27,14 @@ from dataclasses import dataclass
 @dataclass
 class scGPT_ModelOutput(ModelOutput):
     cell_emb: Optional[Tensor] = None
-    pred: Optional[Tensor] = None
     cls_output: Optional[Tensor] = None
     mvc_output: Optional[Tensor] = None
     ecs_output: Optional[Tensor] = None
     dab_output: Optional[Tensor] = None
     loss_ecs: Optional[Tensor] = None
     mvc_zero_probs: Optional[Tensor] = None
+    pcpt_preds: Optional[Tensor] = None
+    gen_preds: Optional[Tensor] = None
 
 
 class scGPT_config(PretrainedConfig):
@@ -1349,5 +1350,3 @@ class AdversarialDiscriminator(nn.Module):
         for layer in self._decoder:
             x = layer(x)
         return self.out_layer(x)
-
-
