@@ -9,7 +9,7 @@ from datasets import Dataset
 
 # from scgpt.huggingface_model import scGPT_config, scGPT_ForPretraining
 from scgpt.model.huggingface_model import scGPT_config, scGPT_ForPretraining
-from scgpt.data_collator import DataCollator
+from scgpt.huggingface_data_collator import scGPT_DataCollator
 from torch.utils.data import DataLoader, BatchSampler, RandomSampler, SequentialSampler
 
 
@@ -35,7 +35,7 @@ for s in special_tokens:
         vocab.append_token(s)
 
 
-collator = DataCollator(
+collator = scGPT_DataCollator(
     vocab,
     model.config.pad_value,
     model.config.mask_value,
@@ -72,3 +72,5 @@ with torch.cuda.amp.autocast(enabled=True):
             gen_key_padding_mask,
             generative_training=True,
         )
+
+
