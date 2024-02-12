@@ -20,8 +20,6 @@ from torch.utils.data import DataLoader, BatchSampler, RandomSampler, Sequential
 from scgpt.tokenizer import GeneVocab, random_mask_value
 from scgpt.scbank.databank import DataBank
 
-config = scGPT_config(vocab_size=1200)
-model = scGPT_ForPretraining(config)
 
 special_tokens = ["<pad>", "<cls>", "<eoc>"]
 
@@ -56,6 +54,12 @@ for s in special_tokens:
         vocab.append_token(s)
     # load or make the dataset w/ <cls> appended at the beginning
 cls_prefix_datatable = data_source / "cls_prefix_data.parquet"
+
+
+config = scGPT_config(vocab_size=len(vocab),
+                      padding_idx=vocab["<pad>"],
+                      )
+model = scGPT_ForPretraining(config)
 if not cls_prefix_datatable.exists():
     raw_dataset = _map_append_cls(raw_dataset)
     raw_dataset.to_parquet(cls_prefix_datatable)
@@ -86,21 +90,21 @@ valid_dataset = raw_dataset["test"]
 
 collator = scGPT_DataCollator(
     vocab,
-    model.config.pad_value,
-    model.config.mask_value,
+    pad_token_id = vocab["<pad>"],
+    mask_value=model.config.mask_value,
     max_length=1200,
     data_style="both",
-    mlm_probability=0.5,
+    mlm_probability=0.15,
 )
-train_loader = DataLoader(
-    train_dataset,
-    batch_size=2,
-    # sampler=train_sampler,
-    collate_fn=collator,
-    drop_last=False,
-    pin_memory=True,
-    # prefetch_factor=4,
-)
+# train_loader = DataLoader(
+#     train_dataset,
+#     batch_size=16,
+#     # sampler=train_sampler,
+#     collate_fn=collator,
+#     drop_last=False,
+#     pin_memory=True,
+#     # prefetch_factor=4,
+# )
 
 model = model.cuda()
 # with torch.cuda.amp.autocast(enabled=True):
@@ -123,8 +127,23 @@ model = model.cuda()
 #         )
 
 
+# for data in train_loader:
+#     # print(data)
+#     pcpt_gene = data["pcpt_gene"]
+#     # if len(pcpt_gene) == 0:
+#     #     print("empty")
+#     #     break
+#     print(len(pcpt_gene))
+#     # break
+
 training_args = TrainingArguments(
-    per_gpu_train_batch_size=2, num_train_epochs=1, output_dir="./save"
+    per_gpu_train_batch_size=32,
+    num_train_epochs=1,
+    output_dir="./save",
+    logging_dir="./logs",
+    # debug=True,
+    remove_unused_columns=False,
+    fp16=True,
 )
 
 trainer = scGPT_pretrainingTrainer(
@@ -134,5 +153,7 @@ trainer = scGPT_pretrainingTrainer(
     train_dataset=train_dataset,
     eval_dataset=valid_dataset,
 )
+
 print("start training...")
+
 trainer.train()

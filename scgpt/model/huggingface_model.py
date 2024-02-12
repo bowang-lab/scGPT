@@ -59,7 +59,7 @@ class scGPT_config(PretrainedConfig):
         GEPC=False,
         ESC=False,
         n_bins=51,
-        padding_idx=0,
+        padding_idx=-2,
         do_mvc=False,
         do_dab=False,
         num_batch_labels=None,
