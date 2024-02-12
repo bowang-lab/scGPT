@@ -9,6 +9,7 @@ import sys
 sys.path.insert(0, "../")
 from scgpt.preprocess import binning
 
+
 class scGPT_DataCollator(DefaultDataCollator):
     """
     Data collator for the mask value learning task. It pads the sequences to
@@ -42,8 +43,9 @@ class scGPT_DataCollator(DefaultDataCollator):
             training setting. If "both", the output will contain both fields above.
             Choices: "pcpt", "gen", "both". Default to "pcpt".
     """
+
     return_tensors: str = "pt"
-    
+
     def __init__(
         self,
         do_padding: bool = True,
@@ -56,14 +58,14 @@ class scGPT_DataCollator(DefaultDataCollator):
         max_length: Optional[int] = None,
         sampling: bool = True,
         reserve_keys: List[str] = [],
-        #reserve_keys: List[str] = field(default_factory=lambda: []),
+        # reserve_keys: List[str] = field(default_factory=lambda: []),
         keep_first_n_tokens: int = 1,
         data_style: str = "pcpt",
     ):
         self.do_padding = do_padding
         self.pad_token_id = pad_token_id
         self.pad_value = pad_value
-        self.do_mlm = do_mlm 
+        self.do_mlm = do_mlm
         self.mlm_probability = mlm_probability
         self.do_binning = do_binning
         self.mask_value = mask_value
@@ -116,7 +118,6 @@ class scGPT_DataCollator(DefaultDataCollator):
         Returns:
             :obj:`Dict[str, torch.Tensor]`: a dict of tensors.
         """
-        
         if len(self.reserve_keys) > 0:
             assert all(key in examples[0] for key in self.reserve_keys), (
                 f"reserve_keys must be a subset of the keys in the examples. "

@@ -1,15 +1,20 @@
 from torch import nn
 from transformers import Trainer, TrainingArguments
 import torch
-from loss import masked_mse_loss
+from .loss import masked_mse_loss
+
 
 class scGPT_TrainingArguments(TrainingArguments):
     pass
 
 
+# TODO: add custom arguments here
+# training loss, mvc loss, etc.
+
 
 class scGPT_pretrainingTrainer(Trainer):
     def compute_loss(self, model, data_dict, return_outputs=False):
+        print("compute_loss")
         # unpack data dict
         pcpt_gene = data_dict["pcpt_gene"].to(model.device)
         pcpt_expr = data_dict["pcpt_expr"].to(model.device)
@@ -46,7 +51,7 @@ class scGPT_pretrainingTrainer(Trainer):
 
         # embed -> expr loss
         previous_cell_embs = outputs.get("cell_emb").detach()
-        preds = self.scGPT_backbone(
+        preds = self.model(
             pcpt_gene,
             pcpt_expr,
             pcpt_key_padding_mask,
@@ -59,6 +64,8 @@ class scGPT_pretrainingTrainer(Trainer):
         ).get("gen_preds")
         loss_gen = masked_mse_loss(preds, gen_expr_target, positions_to_match)
         loss = loss + loss_gen
+
+        print(loss)
 
         outputs = {
             "loss": loss,
