@@ -1,0 +1,10 @@
+{
+    "per_gpu_train_batch_size": 8,
+    "num_train_epochs": 1,
+    "output_dir": "./save",
+    "logging_dir": "./logs",
+    "remove_unused_columns": false,
+    "fp16": true,
+    "mlm_probability": 0.5,
+    "max_length": 1200
+}

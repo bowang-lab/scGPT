@@ -1,3 +1,5 @@
+import json
+from typing import Optional
 from torch import nn
 from transformers import Trainer, TrainingArguments
 import torch
@@ -5,12 +7,18 @@ from .loss import masked_mse_loss
 from dataclasses import dataclass
 
 
+@dataclass
 class scGPT_TrainingArguments(TrainingArguments):
-    pass
+    mlm_probability: Optional[float] = 0.50
+    max_length: Optional[int] = 1200
+    # TODO: add custom arguments here
 
-
-# TODO: add custom arguments here
-# training loss, mvc loss, etc.
+    # training loss, mvc loss, etc.
+    def from_json_file(self, json_path):
+        with open(json_path, "r") as f:
+            data = json.load(f)
+        for k, v in data.items():
+            setattr(self, k, v)
 
 
 class scGPT_pretrainingTrainer(Trainer):
@@ -67,8 +75,6 @@ class scGPT_pretrainingTrainer(Trainer):
         ).get("gen_preds")
         loss_gen = masked_mse_loss(preds, gen_expr_target, positions_to_match)
         loss = loss + loss_gen
-
-        # print(loss)
 
         outputs = {
             "loss": loss,

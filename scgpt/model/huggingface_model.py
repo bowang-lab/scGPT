@@ -42,11 +42,11 @@ class scGPT_config(PretrainedConfig):
 
     def __init__(
         self,
-        vocab_size=50000,
+        vocab_size=60697,
         d_hid=512,
-        n_embd=768,
+        n_embd=512,
         n_layer=12,
-        n_head=12,
+        n_head=8,
         dropout=0.1,
         attention_probs_dropout_prob=0.1,
         initializer_range=0.02,
@@ -59,7 +59,7 @@ class scGPT_config(PretrainedConfig):
         GEPC=False,
         ESC=False,
         n_bins=51,
-        padding_idx=-2,
+        padding_idx=60694,
         do_mvc=False,
         do_dab=False,
         num_batch_labels=None,
