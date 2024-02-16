@@ -7,5 +7,6 @@
     "n_bins": 51,
     "padding_idx": 60694,
     "pad_value": -2,
-    "mask_value": -1
+    "mask_value": -1,
+    "do_mvc": true
 }

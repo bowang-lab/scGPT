@@ -1,10 +1,13 @@
 {
-    "per_gpu_train_batch_size": 8,
+    "per_gpu_train_batch_size": 16,
     "num_train_epochs": 1,
-    "output_dir": "./save",
-    "logging_dir": "./logs",
+    "output_dir": "/scratch/ssd004/scratch/chloexq/scb_dataset_test/save",
+    "logging_dir": "/scratch/ssd004/scratch/chloexq/scb_dataset_test/logs",
     "remove_unused_columns": false,
     "fp16": true,
     "mlm_probability": 0.5,
-    "max_length": 1200
+    "max_length": 1200,
+    "learning_rate": 0.0001,
+    "warmup_ratio_or_step": 0.1,
+    "MVC": true
 }

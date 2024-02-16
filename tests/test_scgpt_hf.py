@@ -11,7 +11,7 @@ sys.path.insert(0, "../")
 
 from datasets import Dataset, load_dataset
 
-from transformers import TrainingArguments
+from transformers import TrainingArguments, get_cosine_schedule_with_warmup
 
 # from scgpt.huggingface_model import scGPT_config, scGPT_ForPretraining
 from scgpt.model.huggingface_model import scGPT_config, scGPT_ForPretraining
@@ -38,12 +38,9 @@ def _map_append_cls(dataset: Dataset) -> Dataset:
     return dataset
 
 
-MODEL_CONFIG = "/home/pangkuan/dev/scGPT-release/tests/test_configs/model_config.json"
-TRAINING_ARGS = "/home/pangkuan/dev/scGPT-release/tests/test_configs/training_args.json"
-data_source = Path("/home/pangkuan/dev/data_disk/scb_sample/partition_0.scb")
-
-
-
+MODEL_CONFIG = "/h/chloexq/scGPT/tests/test_configs/model_config.json"
+TRAINING_ARGS = "/h/chloexq/scGPT/tests/test_configs/training_args.json"
+data_source = Path("/scratch/ssd004/scratch/chloexq/scb_dataset_test/partition_0.scb")
 
 db = DataBank.from_path(data_source)
 raw_dataset = db.main_data.data
@@ -74,7 +71,27 @@ valid_dataset = raw_dataset["test"]
 with open(TRAINING_ARGS) as fin:
     args_json = json.load(fin)
 training_args = scGPT_TrainingArguments(**args_json)
+#print(training_args)
+optimizer = torch.optim.Adam(model.parameters(), lr=training_args.learning_rate)
 
+#if training_args.warmup_ratio_or_step > 0:
+    #total_num_batches = len(train_loader) * args.epochs
+total_num_batches = len(train_dataset)/training_args.per_gpu_train_batch_size
+warmup_steps = (
+    int(total_num_batches * training_args.warmup_ratio_or_step)
+    if training_args.warmup_ratio_or_step < 1
+    else int(training_args.warmup_ratio_or_step)
+    )
+scheduler = get_cosine_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=warmup_steps,
+    num_training_steps=total_num_batches,
+    last_epoch=-1,
+    )
+#else:
+#    scheduler = torch.optim.lr_scheduler.StepLR(
+#        optimizer, training_args.scheduler_interval, gamma=training_args.scheduler_factor
+#    )
 
 collator = scGPT_DataCollator(
     vocab,
@@ -95,7 +112,11 @@ trainer = scGPT_pretrainingTrainer(
     data_collator=collator,
     train_dataset=train_dataset,
     eval_dataset=valid_dataset,
+    optimizers=(optimizer, scheduler),
+
 )
+#print(dir(trainer))
+#print(trainer.args)
 
 print("start training...")
 

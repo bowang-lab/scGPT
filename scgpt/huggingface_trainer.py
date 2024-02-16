@@ -11,6 +11,8 @@ from dataclasses import dataclass
 class scGPT_TrainingArguments(TrainingArguments):
     mlm_probability: Optional[float] = 0.50
     max_length: Optional[int] = 1200
+    warmup_ratio_or_step: Optional[int] = 0.1
+    MVC: Optional[bool] = False
     # TODO: add custom arguments here
 
     # training loss, mvc loss, etc.
@@ -40,7 +42,7 @@ class scGPT_pretrainingTrainer(Trainer):
             gen_gene,
             gen_key_padding_mask,
             CLS=False,
-            MVC=False,
+            MVC=self.args.MVC,
             generative_training=True,
         )
 
@@ -51,7 +53,7 @@ class scGPT_pretrainingTrainer(Trainer):
         )
 
         loss_mvc = None
-        if False:
+        if self.args.MVC:
             # MVC loss
             loss_mvc = masked_mse_loss(
                 outputs.get("mvc_output")[:, pcpt_gene.shape[1] :],
@@ -69,7 +71,7 @@ class scGPT_pretrainingTrainer(Trainer):
             gen_gene,
             gen_key_padding_mask,
             CLS=False,
-            MVC=False,
+            MVC=self.args.MVC,
             input_cell_emb=previous_cell_embs,
             generative_training=True,
         ).get("gen_preds")
