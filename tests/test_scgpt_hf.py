@@ -16,7 +16,11 @@ from transformers import get_cosine_schedule_with_warmup
 # from scgpt.huggingface_model import scGPT_config, scGPT_ForPretraining
 from scgpt.model.huggingface_model import scGPT_config, scGPT_ForPretraining
 from scgpt.huggingface_data_collator import scGPT_DataCollator
-from scgpt.huggingface_trainer import scGPT_pretrainingTrainer, scGPT_TrainingArguments
+from scgpt.huggingface_trainer import (
+    scGPT_pretrainingTrainer,
+    scGPT_TrainingArguments,
+    compute_metrics,
+)
 from scgpt.tokenizer import GeneVocab
 from scgpt.scbank.databank import DataBank
 
@@ -52,6 +56,8 @@ cls_prefix_datatable = data_source / "cls_prefix_data.parquet"
 
 config = scGPT_config.from_json_file(MODEL_CONFIG)
 model = scGPT_ForPretraining(config)
+# mode = scGPT_ForPretraining.from_pretrained("/home/pangkuan/dev/scGPT-release/tests/save/checkpoint-32")
+
 if not cls_prefix_datatable.exists():
     raw_dataset = _map_append_cls(raw_dataset)
     raw_dataset.to_parquet(cls_prefix_datatable)
@@ -106,7 +112,6 @@ collator = scGPT_DataCollator(
     mlm_probability=training_args.mlm_probability,
 )
 
-
 model = model.cuda()
 
 
@@ -117,6 +122,7 @@ trainer = scGPT_pretrainingTrainer(
     train_dataset=train_dataset,
     eval_dataset=valid_dataset,
     optimizers=(optimizer, scheduler),
+    # compute_metrics=compute_metrics,
 )
 # print(dir(trainer))
 # print(trainer.args)
@@ -124,3 +130,4 @@ trainer = scGPT_pretrainingTrainer(
 print("start training...")
 
 trainer.train()
+

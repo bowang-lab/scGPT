@@ -104,11 +104,15 @@ class scGPT_config(PretrainedConfig):
 
 
 class scGPT_ForPretraining(PreTrainedModel):
+    config_class = scGPT_config
+
     def __init__(
         self,
         config: scGPT_config,
     ):
         super().__init__(config)
+        self.config_class = scGPT_config
+
         ntoken = config.vocab_size
         d_model = config.n_embd
         nhead = config.n_head
@@ -1363,3 +1367,22 @@ class AdversarialDiscriminator(nn.Module):
         for layer in self._decoder:
             x = layer(x)
         return self.out_layer(x)
+
+
+class scGPT_ForClassification(scGPT_ForPretraining):
+    def __init__(
+        self,
+        config,
+        num_classes: int,
+        use_generative_training: bool = False,
+    ):
+        super().__init__(config)
+
+        self.cls_decoder = ClsDecoder(
+            d_model=config.d_model,
+            n_cls=num_classes,
+            nlayers=3,
+            activation=nn.LeakyReLU,
+        )
+        self.use_generative_training = use_generative_training
+        raise NotImplementedError

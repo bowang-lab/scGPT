@@ -13,6 +13,7 @@ class scGPT_TrainingArguments(TrainingArguments):
     max_length: Optional[int] = 1200
     warmup_ratio_or_step: Optional[int] = 0.1
     MVC: Optional[bool] = False
+    evaluation_strategy: Optional[str] = "steps"
     # TODO: add custom arguments here
 
     # training loss, mvc loss, etc.
@@ -21,6 +22,11 @@ class scGPT_TrainingArguments(TrainingArguments):
             data = json.load(f)
         for k, v in data.items():
             setattr(self, k, v)
+
+
+def compute_metrics(eval_pred):
+    # logits, labels = eval_pred
+    raise NotImplementedError
 
 
 class scGPT_pretrainingTrainer(Trainer):
