@@ -136,6 +136,7 @@ class scGPT_ForPretraining(PreTrainedModel):
         pre_norm = False
 
         self.model_type = "Transformer"
+        self.use_generative_training = use_generative_training
         self.d_model = d_model
         self.do_dab = do_dab
         self.ecs_threshold = ecs_threshold
@@ -287,29 +288,29 @@ class scGPT_ForPretraining(PreTrainedModel):
 
     def transformer_generate(
         self,
-        pcpt_genes: Tensor,
-        pcpt_values: Tensor,
+        pcpt_gene: Tensor,
+        pcpt_expr: Tensor,
         pcpt_key_padding_mask: Tensor,
-        gen_genes: Tensor,
+        gen_gene: Tensor,
         gen_key_padding_mask: Tensor,
         batch_labels: Optional[Tensor] = None,  # (batch,)
         input_cell_emb: Optional[Tensor] = None,  # (batch, seq_len, embsize)
     ) -> Tuple[Tensor, Tensor]:
         self._check_batch_labels(batch_labels)
 
-        pcpt_token_embs = self.encoder(pcpt_genes)  # (batch, pcpt_len, embsize)
-        pcpt_values = self.value_encoder(pcpt_values)  # (batch, pcpt_len, embsize)
-        pcpt_total_embs = pcpt_token_embs + pcpt_values
+        pcpt_token_embs = self.encoder(pcpt_gene)  # (batch, pcpt_len, embsize)
+        pcpt_expr = self.value_encoder(pcpt_expr)  # (batch, pcpt_len, embsize)
+        pcpt_total_embs = pcpt_token_embs + pcpt_expr
 
         assert self.input_emb_style != "scaling"
-        if gen_genes is not None:
-            gen_token_embs = self.encoder(gen_genes)  # (batch, gen_len, embsize)
+        if gen_gene is not None:
+            gen_token_embs = self.encoder(gen_gene)  # (batch, gen_len, embsize)
             self.cur_gene_token_embs = torch.cat(
                 [pcpt_token_embs, gen_token_embs], dim=1
             )
-            gen_flags = self.flag_encoder(
-                torch.tensor(1).to(pcpt_values.device)
-            ).expand(gen_genes.shape[0], gen_genes.shape[1], -1)
+            gen_flags = self.flag_encoder(torch.tensor(1).to(pcpt_expr.device)).expand(
+                gen_gene.shape[0], gen_gene.shape[1], -1
+            )
 
             gen_total_embs = gen_token_embs + gen_flags
         else:
@@ -321,13 +322,13 @@ class scGPT_ForPretraining(PreTrainedModel):
             pcpt_total_embs = self.dsbn(
                 pcpt_total_embs.permute(0, 2, 1), batch_label
             ).permute(0, 2, 1)
-            if gen_genes is not None:
+            if gen_gene is not None:
                 gen_total_embs = self.dsbn(
                     gen_total_embs.permute(0, 2, 1), batch_label
                 ).permute(0, 2, 1)
         # else:
         #     pcpt_total_embs = self.bn(pcpt_total_embs.permute(0, 2, 1)).permute(0, 2, 1)
-        #     if gen_genes is not None:
+        #     if gen_gene is not None:
         #         gen_total_embs = self.bn(gen_total_embs.permute(0, 2, 1)).permute(
         #             0, 2, 1
         #         )
@@ -507,6 +508,25 @@ class scGPT_ForPretraining(PreTrainedModel):
 
         return output
 
+    # def forward(
+    #     self,
+    #     *args,
+    #     **kwargs,
+    # ) -> scGPT_ModelOutput:
+    #     """
+    #     Wrapper to call either generative_forward or perceptual_forward, depending
+    #     on the value of the "generative_training" kwarg.
+    #     """
+
+    #     # get the generative training flag and pop it out
+    #     do_generative_training = kwargs.pop("generative_training")
+    #     if do_generative_training:
+    #         model_output = self.generative_forward(*args, **kwargs)
+    #         return scGPT_ModelOutput(**model_output)
+    #     else:
+    #         model_output = self.perceptual_forward(*args, **kwargs)
+    #         return scGPT_ModelOutput(**model_output)
+
     def forward(
         self,
         *args,
@@ -516,29 +536,21 @@ class scGPT_ForPretraining(PreTrainedModel):
         Wrapper to call either generative_forward or perceptual_forward, depending
         on the value of the "generative_training" kwarg.
         """
-        if "generative_training" not in kwargs:
-            # raise ValueError("generative_training kwarg is required")
-            warnings.warn(
-                "generative_training kwarg is required but not provided! "
-                "Using False and calling perceptual_forward instead"
-            )
-            return self.perceptual_forward(*args, **kwargs)
 
-        # get the generative training flag and pop it out
-        do_generative_training = kwargs.pop("generative_training")
+        do_generative_training = self.use_generative_training
         if do_generative_training:
-            model_output = self.generative_forward(*args, **kwargs)
+            model_output = self.generative_forward(**kwargs)
             return scGPT_ModelOutput(**model_output)
         else:
-            model_output = self.perceptual_forward(*args, **kwargs)
+            model_output = self.perceptual_forward(**kwargs)
             return scGPT_ModelOutput(**model_output)
 
     def generative_forward(
         self,
-        pcpt_genes: Tensor,
-        pcpt_values: Tensor,
+        pcpt_gene: Tensor,
+        pcpt_expr: Tensor,
         pcpt_key_padding_mask: Tensor,
-        gen_genes: Tensor,
+        gen_gene: Tensor,
         gen_key_padding_mask: Tensor,
         batch_labels: Optional[Tensor] = None,
         CLS: bool = False,
@@ -547,18 +559,19 @@ class scGPT_ForPretraining(PreTrainedModel):
         ECS: bool = False,
         do_sample: bool = False,
         input_cell_emb: Optional[Tensor] = None,
+        **kwargs,
     ) -> Mapping[str, Tensor]:
         """
         Args:
-            pcpt_genes (:obj:`Tensor`): token ids of the perceptual part, shape
+            pcpt_gene (:obj:`Tensor`): token ids of the perceptual part, shape
                 [batch_size, seq_len]
-            pcpt_values (:obj:`Tensor`): token values of the perceptual part, shape
+            pcpt_expr (:obj:`Tensor`): token values of the perceptual part, shape
                 [batch_size, seq_len]
-            pcpt_key_padding_mask (:obj:`Tensor`): mask for pcpt_genes, shape
+            pcpt_key_padding_mask (:obj:`Tensor`): mask for pcpt_gene, shape
                 [batch_size, seq_len]
-            gen_genes (:obj:`Tensor`): token ids of the generative part, shape
+            gen_gene (:obj:`Tensor`): token ids of the generative part, shape
                 [batch_size, seq_len]
-            gen_key_padding_mask (:obj:`Tensor`): mask for gen_genes, shape
+            gen_key_padding_mask (:obj:`Tensor`): mask for gen_gene, shape
                 [batch_size, seq_len]
             batch_labels (:obj:`Tensor`): batch labels, shape [batch_size]
             do_sample (:obj:`bool`): whether to do sampling from bernoulli for
@@ -574,10 +587,10 @@ class scGPT_ForPretraining(PreTrainedModel):
         """
 
         pcpt_output, gen_output = self.transformer_generate(
-            pcpt_genes,
-            pcpt_values,
+            pcpt_gene,
+            pcpt_expr,
             pcpt_key_padding_mask,
-            gen_genes,
+            gen_gene,
             gen_key_padding_mask,
             batch_labels,
             input_cell_emb=input_cell_emb,
@@ -604,12 +617,12 @@ class scGPT_ForPretraining(PreTrainedModel):
         if self.explicit_zero_prob and do_sample:
             bernoulli = Bernoulli(probs=decoder_output["zero_probs"])
             full_preds = bernoulli.sample() * decoder_output["pred"]
-            output["pcpt_preds"] = full_preds[:, : pcpt_genes.shape[1]]
-            output["gen_preds"] = full_preds[:, pcpt_genes.shape[1] :]
+            output["pcpt_preds"] = full_preds[:, : pcpt_gene.shape[1]]
+            output["gen_preds"] = full_preds[:, pcpt_gene.shape[1] :]
         else:
             full_preds = decoder_output["pred"]  # (batch, seq_len)
-            output["pcpt_preds"] = full_preds[:, : pcpt_genes.shape[1]]
-            output["gen_preds"] = full_preds[:, pcpt_genes.shape[1] :]
+            output["pcpt_preds"] = full_preds[:, : pcpt_gene.shape[1]]
+            output["gen_preds"] = full_preds[:, pcpt_gene.shape[1] :]
         if self.explicit_zero_prob:
             output["zero_probs"] = decoder_output["zero_probs"]
 

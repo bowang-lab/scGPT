@@ -11,14 +11,13 @@ sys.path.insert(0, "../")
 
 from datasets import Dataset, load_dataset
 
-from transformers import TrainingArguments, get_cosine_schedule_with_warmup
+from transformers import get_cosine_schedule_with_warmup
 
 # from scgpt.huggingface_model import scGPT_config, scGPT_ForPretraining
 from scgpt.model.huggingface_model import scGPT_config, scGPT_ForPretraining
 from scgpt.huggingface_data_collator import scGPT_DataCollator
 from scgpt.huggingface_trainer import scGPT_pretrainingTrainer, scGPT_TrainingArguments
-from torch.utils.data import DataLoader, BatchSampler, RandomSampler, SequentialSampler
-from scgpt.tokenizer import GeneVocab, random_mask_value
+from scgpt.tokenizer import GeneVocab
 from scgpt.scbank.databank import DataBank
 
 
@@ -38,9 +37,9 @@ def _map_append_cls(dataset: Dataset) -> Dataset:
     return dataset
 
 
-MODEL_CONFIG = "/h/chloexq/scGPT/tests/test_configs/model_config.json"
-TRAINING_ARGS = "/h/chloexq/scGPT/tests/test_configs/training_args.json"
-data_source = Path("/scratch/ssd004/scratch/chloexq/scb_dataset_test/partition_0.scb")
+MODEL_CONFIG = "/home/pangkuan/dev/scGPT-release/tests/test_configs/model_config.json"
+TRAINING_ARGS = "/home/pangkuan/dev/scGPT-release/tests/test_configs/training_args.json"
+data_source = Path("/home/pangkuan/dev/data_disk/scb_sample/partition_0.scb")
 
 db = DataBank.from_path(data_source)
 raw_dataset = db.main_data.data
@@ -64,31 +63,36 @@ raw_dataset = load_dataset(
 )
 
 raw_dataset = raw_dataset.with_format("torch")
+
 raw_dataset = raw_dataset.train_test_split(test_size=0.2, shuffle=True)
 train_dataset = raw_dataset["train"]
 valid_dataset = raw_dataset["test"]
 
+# keep 10% of the dataset for testing the code
+train_dataset = train_dataset.select(range(int(len(train_dataset) * 0.01)))
+valid_dataset = valid_dataset.select(range(int(len(valid_dataset) * 0.01)))
+
 with open(TRAINING_ARGS) as fin:
     args_json = json.load(fin)
 training_args = scGPT_TrainingArguments(**args_json)
-#print(training_args)
+# print(training_args)
 optimizer = torch.optim.Adam(model.parameters(), lr=training_args.learning_rate)
 
-#if training_args.warmup_ratio_or_step > 0:
-    #total_num_batches = len(train_loader) * args.epochs
-total_num_batches = len(train_dataset)/training_args.per_gpu_train_batch_size
+# if training_args.warmup_ratio_or_step > 0:
+# total_num_batches = len(train_loader) * args.epochs
+total_num_batches = len(train_dataset) / training_args.per_device_train_batch_size
 warmup_steps = (
     int(total_num_batches * training_args.warmup_ratio_or_step)
     if training_args.warmup_ratio_or_step < 1
     else int(training_args.warmup_ratio_or_step)
-    )
+)
 scheduler = get_cosine_schedule_with_warmup(
     optimizer,
     num_warmup_steps=warmup_steps,
     num_training_steps=total_num_batches,
     last_epoch=-1,
-    )
-#else:
+)
+# else:
 #    scheduler = torch.optim.lr_scheduler.StepLR(
 #        optimizer, training_args.scheduler_interval, gamma=training_args.scheduler_factor
 #    )
@@ -113,10 +117,9 @@ trainer = scGPT_pretrainingTrainer(
     train_dataset=train_dataset,
     eval_dataset=valid_dataset,
     optimizers=(optimizer, scheduler),
-
 )
-#print(dir(trainer))
-#print(trainer.args)
+# print(dir(trainer))
+# print(trainer.args)
 
 print("start training...")
 

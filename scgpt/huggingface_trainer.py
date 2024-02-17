@@ -28,23 +28,18 @@ class scGPT_pretrainingTrainer(Trainer):
         # print("compute_loss")
         # unpack data dict
         pcpt_gene = data_dict["pcpt_gene"].int()
-        pcpt_expr = data_dict["pcpt_expr"]
-        pcpt_key_padding_mask = pcpt_gene.eq(model.config.pad_value)
+        # pcpt_expr = data_dict["pcpt_expr"]
+
         gen_gene = data_dict["gen_gene"].int()
-        gen_expr_target = target_values = data_dict["gen_expr_target"]
-        gen_key_padding_mask = gen_gene.eq(model.config.pad_value)
+        gen_expr_target = data_dict["gen_expr_target"]
+        gen_key_padding_mask = data_dict["gen_key_padding_mask"]
+        # pcpt_key_padding_mask = data_dict["pcpt_key_padding_mask"]
+        data_dict["CLS"] = False
+        data_dict["MVC"] = self.args.MVC
+        data_dict["generative_training"] = True
 
         # forward pass of generation
-        outputs = model(
-            pcpt_gene,
-            pcpt_expr,
-            pcpt_key_padding_mask,
-            gen_gene,
-            gen_key_padding_mask,
-            CLS=False,
-            MVC=self.args.MVC,
-            generative_training=True,
-        )
+        outputs = model(**data_dict)
 
         gen_expr_preds = outputs.get("gen_preds")
         positions_to_match = ~gen_key_padding_mask
@@ -64,17 +59,8 @@ class scGPT_pretrainingTrainer(Trainer):
 
         # embed -> expr loss
         previous_cell_embs = outputs.get("cell_emb").detach()
-        preds = self.model(
-            pcpt_gene,
-            pcpt_expr,
-            pcpt_key_padding_mask,
-            gen_gene,
-            gen_key_padding_mask,
-            CLS=False,
-            MVC=self.args.MVC,
-            input_cell_emb=previous_cell_embs,
-            generative_training=True,
-        ).get("gen_preds")
+        data_dict["cell_emb"] = previous_cell_embs
+        preds = self.model(**data_dict).get("gen_preds")
         loss_gen = masked_mse_loss(preds, gen_expr_target, positions_to_match)
         loss = loss + loss_gen
 

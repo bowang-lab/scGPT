@@ -369,6 +369,8 @@ class scGPT_DataCollator(DefaultDataCollator):
             "pcpt_expr": padded_pcpt_expressions,
             "gen_gene": padded_gen_genes,
             "gen_expr_target": padded_gen_expressions,
+            "pcpt_key_padding_mask": padded_pcpt_genes.eq(self.pad_value),
+            "gen_key_padding_mask": padded_gen_genes.eq(self.pad_value),
         }
 
         return data_dict
