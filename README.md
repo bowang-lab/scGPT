@@ -11,6 +11,8 @@ This is the official codebase for **scGPT: Towards Building a Foundation Model f
 
 **!UPDATE**: We have released several new pretrained scGPT checkpoints. Please see the [Pretrained scGPT checkpoints](#pretrained-scGPT-checkpoints) section for more details.
 
+**[2024.02.26]** We have provided a priliminary support for running the pretraining workflow with HuggingFace at the [integrate-huggingface-model](https://github.com/bowang-lab/scGPT/tree/integrate-huggingface-model) branch. We will conduct further testing and merge it to the main branch soon.
+
 **[2023.12.31]** New tutorials about zero-shot applications are now available! Please see find them in the [tutorials/zero-shot](tutorials/zero-shot) directory. We also provide a new continual pretrained model checkpoint for cell embedding related tasks. Please see the [notebook](tutorials/zero-shot/Tutorial_ZeroShot_Integration_Continual_Pretraining.ipynb) for more details.
 
 **[2023.11.07]** As requested by many, now we have made flash-attention an optional dependency. The pretrained weights can be loaded on pytorch CPU, GPU, and flash-attn backends using the same [load_pretrained](https://github.com/bowang-lab/scGPT/blob/f6097112fe5175cd4e221890ed2e2b1815f54010/scgpt/utils/util.py#L304) function, `load_pretrained(target_model, torch.load("path_to_ckpt.pt"))`. An example usage is also [here](https://github.com/bowang-lab/scGPT/blob/f6097112fe5175cd4e221890ed2e2b1815f54010/scgpt/tasks/cell_emb.py#L258).
