@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # custom
-*.pt
+
 *.pth
 *.pdf
 *.pkl
