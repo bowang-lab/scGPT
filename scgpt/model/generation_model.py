@@ -39,8 +39,11 @@ class TransformerGenerator(nn.Module):
         pert_pad_id: int = 2,
         do_mvc: bool = False,
         domain_spec_batchnorm: Union[bool, str] = False,
+        n_input_bins: Optional[int] = 0,
         cell_emb_style: str = "cls",
         mvc_decoder_style: str = "inner product",
+        decoder_activation: Optional[str] = None,
+        decoder_adaptive_bias: bool = False,
         ecs_threshold: float = 0.3,
         explicit_zero_prob: bool = False,
         use_fast_transformer: bool = False,
@@ -55,31 +58,19 @@ class TransformerGenerator(nn.Module):
         self.pert_pad_id = pert_pad_id
         self.ecs_threshold = ecs_threshold
         self.domain_spec_batchnorm = domain_spec_batchnorm
+        self.n_input_bins = n_input_bins
         self.cell_emb_style = cell_emb_style
         self.explicit_zero_prob = explicit_zero_prob
         self.norm_scheme = "pre" if pre_norm else "post"
         if cell_emb_style not in ["cls", "avg-pool", "w-pool"]:
             raise ValueError(f"Unknown cell_emb_style: {cell_emb_style}")
-        if use_fast_transformer:
-            try:
-                from flash_attn.flash_attention import FlashMHA
-            except ImportError:
-                import warnings
-
-                warnings.warn(
-                    "flash-attn is not installed, using pytorch transformer instead. "
-                    "Set use_fast_transformer=False to avoid this warning. "
-                    "Installing flash-attn is highly recommended."
-                )
-                use_fast_transformer = False
-        self.use_fast_transformer = use_fast_transformer
 
         self.encoder = GeneEncoder(ntoken, d_model, padding_idx=vocab[pad_token])
         self.value_encoder = ContinuousValueEncoder(d_model, dropout)
         self.pert_encoder = nn.Embedding(3, d_model, padding_idx=pert_pad_id)
 
-        print("Using simple batchnorm instead of domain specific batchnorm")
-        self.bn = nn.BatchNorm1d(d_model, eps=6.1e-5)
+        # print("Using simple batchnorm instead of domain specific batchnorm")
+        # self.bn = nn.BatchNorm1d(d_model, eps=6.1e-5)
 
         if use_fast_transformer:
             if fast_transformer_backend == "linear":
@@ -103,9 +94,11 @@ class TransformerGenerator(nn.Module):
             self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
 
         # self.decoder = nn.Linear(d_model, 1)
-        self.decoder = ExprDecoder(
+        self.decoder = AffineExprDecoder(
             d_model,
             explicit_zero_prob=explicit_zero_prob,
+            activation=decoder_activation,
+            adaptive_bias=decoder_adaptive_bias,
         )
         self.cls_decoder = ClsDecoder(d_model, n_cls, nlayers=nlayers_cls)
         if do_mvc:
@@ -114,9 +107,6 @@ class TransformerGenerator(nn.Module):
                 arch_style=mvc_decoder_style,
                 explicit_zero_prob=explicit_zero_prob,
             )
-
-        self.sim = Similarity(temp=0.5)
-        self.creterion_cce = nn.CrossEntropyLoss()
 
         self.init_weights()
 
@@ -137,7 +127,7 @@ class TransformerGenerator(nn.Module):
         perts = self.pert_encoder(input_pert_flags)  # (batch, seq_len, embsize)
         total_embs = src + values + perts
 
-        total_embs = self.bn(total_embs.permute(0, 2, 1)).permute(0, 2, 1)
+        # total_embs = self.bn(total_embs.permute(0, 2, 1)).permute(0, 2, 1)
         output = self.transformer_encoder(
             total_embs, src_key_padding_mask=src_key_padding_mask
         )
@@ -203,11 +193,21 @@ class TransformerGenerator(nn.Module):
             do_sample = True
             logger.warning("Auto set do_sample to True when model is in eval mode.")
 
+        # binning input gene values
+        if self.n_input_bins > 0:
+            from ..preprocess import binning
+
+            processed_values = torch.stack(
+                [binning(row, n_bins=self.n_input_bins) for row in values], dim=0
+            ).to(values.device)
+        else:
+            processed_values = values
+
         transformer_output = self._encode(
-            src, values, input_pert_flags, src_key_padding_mask
+            src, processed_values, input_pert_flags, src_key_padding_mask
         )
         output = {}
-        mlm_output = self.decoder(transformer_output)
+        mlm_output = self.decoder(transformer_output, values)
         if self.explicit_zero_prob and do_sample:
             bernoulli = Bernoulli(probs=mlm_output["zero_probs"])
             output["mlm_output"] = bernoulli.sample() * mlm_output["pred"]
@@ -353,6 +353,114 @@ class GeneEncoder(nn.Module):
             num_embeddings, embedding_dim, padding_idx=padding_idx
         )
         self.enc_norm = nn.LayerNorm(embedding_dim)
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.embedding(x)  # (batch, seq_len, embsize)
+        x = self.enc_norm(x)
+        return x
+
+
+class AffineExprDecoder(nn.Module):
+    def __init__(
+        self,
+        d_model: int,
+        explicit_zero_prob: bool = False,
+        activation: Optional[str] = None,
+        tanh_coeff: bool = False,
+        adaptive_bias: bool = False,
+    ):
+        """
+        Predict the expression value of each gene in an affine like form of Ax + b.
+        This decoder takes two ExprDecoder intrinsically to genrate the coefficient A and bias b.
+
+        Args:
+            d_model: The embedding dimension.
+            explicit_zero_prob: If True, predict the probability of each gene being
+                zero.
+            activation: The activation function for the coefficient A and bias b.
+            tanh_coeff: If True, use tanh activation for the coefficient A.
+            adaptive_bias: If True, use a learnable bias for the bias b.
+        """
+        super().__init__()
+        self.explicit_zero_prob = explicit_zero_prob
+        self.tanh_coeff = tanh_coeff
+        self.adaptive_bias = adaptive_bias
+        self.coeff_decoder = ExprDecoder(d_model, explicit_zero_prob=explicit_zero_prob)
+        self.bias_decoder = ExprDecoder(d_model, explicit_zero_prob=explicit_zero_prob)
+
+        self.activation = activation
+        if activation is not None:
+            assert hasattr(nn, activation), f"Unknown activation: {activation}"
+            self.activation = getattr(nn, activation)()
+
+    def forward(self, x: Tensor, values: Tensor) -> Tensor:
+        """
+        Args:
+            x: Tensor, shape [batch_size, seq_len, embsize]
+            values: Tensor, shape [batch_size, seq_len]
+
+        Returns:
+            output Tensor of shape [batch_size, seq_len]
+        """
+        coeff = self.coeff_decoder(x)
+        bias = self.bias_decoder(x)
+
+        if self.activation is not None:
+            coeff["pred"] = self.activation(coeff["pred"])
+            bias["pred"] = self.activation(bias["pred"])
+
+        # if self.tanh_coeff:
+        #     coeff["pred"] = 1 + torch.tanh(coeff["pred"])
+
+        if self.adaptive_bias:
+            # bias["pred"] = bias["pred"] * values.mean(dim=1, keepdim=True)
+            non_zero_value_mean = values.sum(dim=1, keepdim=True) / (values != 0).sum(
+                dim=1, keepdim=True
+            )
+            bias["pred"] = bias["pred"] * non_zero_value_mean
+
+        if self.explicit_zero_prob:
+            return {
+                "pred": coeff["pred"] * values + bias["pred"],
+                "zero_probs": coeff["zero_probs"],
+            }
+
+        return dict(pred=coeff["pred"] * values + bias["pred"])
+
+
+class TokenEmbedding(nn.Module):
+    def __init__(
+        self,
+        num_embeddings: int,
+        embedding_dim: int,
+        padding_idx: Optional[int] = None,
+        zero_out_idx: Optional[int] = None,
+    ):
+        """
+        Generic token embedding module.
+
+        Args:
+            num_embeddings: The number of tokens.
+            embedding_dim: The embedding dimension.
+            padding_idx: The index of the padding token.
+            zero_out_idx: Indicate if any idx embedding should be zero vector.
+        """
+        super().__init__()
+        self.embedding = nn.Embedding(
+            num_embeddings, embedding_dim, padding_idx=padding_idx
+        )
+        self.enc_norm = nn.LayerNorm(embedding_dim)
+
+        self.zero_out_idx = zero_out_idx
+        if zero_out_idx is not None:
+            self._fill_idx_with_zero(zero_out_idx)
+            zero_vector = self(zero_out_idx)
+            assert torch.all(zero_vector == 0.0)
+            assert not zero_vector.requires_grad
+
+    def _fill_idx_with_zero(self, idx) -> None:
+        with torch.no_grad():
+            self.embedding.weight[idx].fill_(0)
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.embedding(x)  # (batch, seq_len, embsize)
