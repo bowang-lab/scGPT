@@ -11,7 +11,6 @@ import numpy as np
 import torch
 import pandas as pd
 from anndata import AnnData
-import scib
 from matplotlib import pyplot as plt
 from matplotlib import axes
 from IPython import get_ipython
@@ -375,6 +374,8 @@ def eval_scib_metrics(
     label_key: str = "celltype",
     notes: Optional[str] = None,
 ) -> Dict:
+    import scib
+
     results = scib.metrics.metrics(
         adata,
         adata_int=adata,
