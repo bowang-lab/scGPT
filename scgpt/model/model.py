@@ -75,7 +75,7 @@ class TransformerModel(nn.Module):
         if use_fast_transformer:
             if not flash_attn_available:
                 warnings.warn(
-                    "flash-attn is not installed, using pytorch transformer instead. "
+                    "a compatible version of flash-attn is not installed, using pytorch transformer instead. "
                     "Set use_fast_transformer=False to avoid this warning. "
                     "Installing flash-attn is highly recommended."
                 )
