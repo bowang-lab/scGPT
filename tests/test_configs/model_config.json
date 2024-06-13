@@ -1,0 +1,12 @@
+{
+    "vocab_size": 60697,
+    "d_hid": 1024,
+    "n_embd": 512,
+    "n_head": 8,
+    "n_layer": 6,
+    "n_bins": 51,
+    "padding_idx": 60694,
+    "pad_value": -2,
+    "mask_value": -1,
+    "do_mvc": true
+}

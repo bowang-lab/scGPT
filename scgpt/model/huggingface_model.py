@@ -12,53 +12,135 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 from torch.distributions import Bernoulli
 from tqdm import trange
 
-try:
-    from flash_attn.flash_attention import FlashMHA
+from flash_attn.flash_attention import FlashMHA
+from .flash_layers import FlashscGPTLayer, FlashscGPTGenerator
 
-    flash_attn_available = True
-except ImportError:
-    import warnings
-
-    warnings.warn("flash_attn is not installed")
-    flash_attn_available = False
 
 from .dsbn import DomainSpecificBatchNorm1d
 from .grad_reverse import grad_reverse
+from transformers import PreTrainedModel, PretrainedConfig
+from transformers.file_utils import ModelOutput
+
+from dataclasses import dataclass
 
 
-class TransformerModel(nn.Module):
+@dataclass
+class scGPT_ModelOutput(ModelOutput):
+    cell_emb: Optional[Tensor] = None
+    cls_output: Optional[Tensor] = None
+    mvc_output: Optional[Tensor] = None
+    ecs_output: Optional[Tensor] = None
+    dab_output: Optional[Tensor] = None
+    loss_ecs: Optional[Tensor] = None
+    mvc_zero_probs: Optional[Tensor] = None
+    pcpt_preds: Optional[Tensor] = None
+    gen_preds: Optional[Tensor] = None
+
+
+class scGPT_config(PretrainedConfig):
+    model_type = "scGPT"
+
     def __init__(
         self,
-        ntoken: int,
-        d_model: int,
-        nhead: int,
-        d_hid: int,
-        nlayers: int,
-        nlayers_cls: int = 3,
-        n_cls: int = 1,
-        padding_idx: Any = None,
-        dropout: float = 0.5,
-        pad_token: str = "<pad>",
-        pad_value: int = 0,
-        do_mvc: bool = False,
-        do_dab: bool = False,
-        use_batch_labels: bool = False,
-        num_batch_labels: Optional[int] = None,
-        domain_spec_batchnorm: Union[bool, str] = False,
-        input_emb_style: str = "continuous",
-        n_input_bins: Optional[int] = None,
-        cell_emb_style: str = "cls",
-        mvc_decoder_style: str = "inner product",
-        ecs_threshold: float = 0.3,
-        explicit_zero_prob: bool = False,
-        use_generative_training=False,
-        use_fast_transformer: bool = False,
-        fast_transformer_backend: str = "flash",
-        pre_norm: bool = False,
-        use_sim_decoder: bool = False,
+        vocab_size=60697,
+        d_hid=512,
+        n_embd=512,
+        n_layer=12,
+        n_head=8,
+        dropout=0.1,
+        attention_probs_dropout_prob=0.1,
+        initializer_range=0.02,
+        pad_value=-2,
+        mask_value=-1,
+        use_mod=False,
+        use_batch_labels=False,
+        DSBN=False,
+        CLS=False,
+        GEPC=False,
+        ESC=False,
+        n_bins=51,
+        padding_idx=60694,
+        do_mvc=False,
+        do_dab=False,
+        num_batch_labels=None,
+        domain_spec_batchnorm=False,
+        ecs_threshold=0.3,
+        explicit_zero_prob=False,
+        use_generative_training=True,
+        use_fast_transformer=True,
+        fast_transformer_backend="flash",
+        use_sim_decoder=False,
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
+        self.vocab_size = vocab_size
+        self.d_hid = d_hid
+        self.n_embd = n_embd
+        self.n_layer = n_layer
+        self.n_head = n_head
+        self.dropout = dropout
+        self.attention_probs_dropout_prob = attention_probs_dropout_prob
+        self.initializer_range = initializer_range
+        self.use_mod = use_mod
+        self.use_batch_labels = use_batch_labels
+        self.num_batch_labels = num_batch_labels
+        self.DSBN = DSBN
+        self.CLS = CLS
+        self.GEPC = GEPC
+        self.ESC = ESC
+        self.pad_value = pad_value
+        self.mask_value = mask_value
+        self.n_bins = n_bins
+        self.padding_idx = padding_idx
+        self.do_mvc = do_mvc
+        self.do_dab = do_dab
+        self.domain_spec_batchnorm = domain_spec_batchnorm
+        self.ecs_threshold = ecs_threshold
+        self.explicit_zero_prob = explicit_zero_prob
+        self.use_generative_training = use_generative_training
+        self.use_fast_transformer = use_fast_transformer
+        self.fast_transformer_backend = fast_transformer_backend
+        self.use_sim_decoder = use_sim_decoder
+
+
+class scGPT_ForPretraining(PreTrainedModel):
+    config_class = scGPT_config
+
+    def __init__(
+        self,
+        config: scGPT_config,
+    ):
+        super().__init__(config)
+        self.config_class = scGPT_config
+
+        ntoken = config.vocab_size
+        d_model = config.n_embd
+        nhead = config.n_head
+        d_hid = config.d_hid
+        nlayers = config.n_layer
+        padding_idx = config.padding_idx
+        dropout = config.dropout
+        pad_value = config.pad_value
+        do_mvc = config.do_mvc
+        do_dab = config.do_dab
+        use_batch_labels = config.use_batch_labels
+        num_batch_labels = config.num_batch_labels
+        domain_spec_batchnorm = config.domain_spec_batchnorm
+        n_input_bins = config.n_bins
+        ecs_threshold = config.ecs_threshold
+        explicit_zero_prob = config.explicit_zero_prob
+        use_generative_training = config.use_generative_training
+        use_fast_transformer = config.use_fast_transformer
+        fast_transformer_backend = config.fast_transformer_backend
+        use_sim_decoder = config.use_sim_decoder
+        pad_token = "<pad>"
+        input_emb_style = "continuous"
+        cell_emb_style = "cls"
+        mvc_decoder_style = "inner product"
+        pre_norm = False
+
         self.model_type = "Transformer"
+        self.use_generative_training = use_generative_training
         self.d_model = d_model
         self.do_dab = do_dab
         self.ecs_threshold = ecs_threshold
@@ -75,15 +157,6 @@ class TransformerModel(nn.Module):
             )
         if cell_emb_style not in ["cls", "avg-pool", "w-pool"]:
             raise ValueError(f"Unknown cell_emb_style: {cell_emb_style}")
-        if use_fast_transformer:
-            if not flash_attn_available:
-                warnings.warn(
-                    "flash-attn is not installed, using pytorch transformer instead. "
-                    "Set use_fast_transformer=False to avoid this warning. "
-                    "Installing flash-attn is highly recommended."
-                )
-                use_fast_transformer = False
-        self.use_fast_transformer = use_fast_transformer
 
         # TODO: add dropout in the GeneEncoder
         self.encoder = GeneEncoder(ntoken, d_model, padding_idx=padding_idx)
@@ -106,15 +179,16 @@ class TransformerModel(nn.Module):
         if use_batch_labels:
             self.batch_encoder = BatchLabelEncoder(num_batch_labels, d_model)
 
-        if domain_spec_batchnorm is True or domain_spec_batchnorm == "dsbn":
+        if domain_spec_batchnorm:
             use_affine = True if domain_spec_batchnorm == "do_affine" else False
             print(f"Use domain specific batchnorm with affine={use_affine}")
             self.dsbn = DomainSpecificBatchNorm1d(
                 d_model, num_batch_labels, eps=6.1e-5, affine=use_affine
             )
-        elif domain_spec_batchnorm == "batchnorm":
-            print("Using simple batchnorm instead of domain specific batchnorm")
-            self.bn = nn.BatchNorm1d(d_model, eps=6.1e-5)
+        # else:
+        #     print("Using simple batchnorm instead of domain specific batchnorm")
+        #     self.bn = nn.BatchNorm1d(d_model, eps=6.1e-5)
+        # bug
 
         if use_generative_training:
             encoder_layers = FlashscGPTLayer(
@@ -153,11 +227,11 @@ class TransformerModel(nn.Module):
             use_batch_labels=use_batch_labels,
         )
 
-        if n_cls > 1:
-            if use_sim_decoder:
-                self.cls_decoder = SimDecoder(d_model, n_cls, nlayers=nlayers_cls)
-            else:
-                self.cls_decoder = ClsDecoder(d_model, n_cls, nlayers=nlayers_cls)
+        # if n_cls > 1:
+        #     if use_sim_decoder:
+        #         self.cls_decoder = SimDecoder(d_model, n_cls, nlayers=nlayers_cls)
+        #     else:
+        #         self.cls_decoder = ClsDecoder(d_model, n_cls, nlayers=nlayers_cls)
 
         if do_mvc:
             self.mvc_decoder = MVCDecoder(
@@ -197,20 +271,19 @@ class TransformerModel(nn.Module):
         self.cur_gene_token_embs = src
 
         values = self.value_encoder(values)  # (batch, seq_len, embsize)
-        # Question: why mess with these values at all?
         if self.input_emb_style == "scaling":
             values = values.unsqueeze(2)
             total_embs = src * values
         else:
             total_embs = src + values
 
-        if getattr(self, "dsbn", None) is not None:
+        if self.domain_spec_batchnorm:
             batch_label = int(batch_labels[0].item())
             total_embs = self.dsbn(total_embs.permute(0, 2, 1), batch_label).permute(
                 0, 2, 1
             )  # the batch norm always works on dim 1
-        elif getattr(self, "bn", None) is not None:
-            total_embs = self.bn(total_embs.permute(0, 2, 1)).permute(0, 2, 1)
+        # else:
+        #     total_embs = self.bn(total_embs.permute(0, 2, 1)).permute(0, 2, 1)
 
         output = self.transformer_encoder(
             total_embs, src_key_padding_mask=src_key_padding_mask
@@ -219,29 +292,29 @@ class TransformerModel(nn.Module):
 
     def transformer_generate(
         self,
-        pcpt_genes: Tensor,
-        pcpt_values: Tensor,
+        pcpt_gene: Tensor,
+        pcpt_expr: Tensor,
         pcpt_key_padding_mask: Tensor,
-        gen_genes: Tensor,
+        gen_gene: Tensor,
         gen_key_padding_mask: Tensor,
         batch_labels: Optional[Tensor] = None,  # (batch,)
         input_cell_emb: Optional[Tensor] = None,  # (batch, seq_len, embsize)
     ) -> Tuple[Tensor, Tensor]:
         self._check_batch_labels(batch_labels)
 
-        pcpt_token_embs = self.encoder(pcpt_genes)  # (batch, pcpt_len, embsize)
-        pcpt_values = self.value_encoder(pcpt_values)  # (batch, pcpt_len, embsize)
-        pcpt_total_embs = pcpt_token_embs + pcpt_values
+        pcpt_token_embs = self.encoder(pcpt_gene)  # (batch, pcpt_len, embsize)
+        pcpt_expr = self.value_encoder(pcpt_expr)  # (batch, pcpt_len, embsize)
+        pcpt_total_embs = pcpt_token_embs + pcpt_expr
 
         assert self.input_emb_style != "scaling"
-        if gen_genes is not None:
-            gen_token_embs = self.encoder(gen_genes)  # (batch, gen_len, embsize)
+        if gen_gene is not None:
+            gen_token_embs = self.encoder(gen_gene)  # (batch, gen_len, embsize)
             self.cur_gene_token_embs = torch.cat(
                 [pcpt_token_embs, gen_token_embs], dim=1
             )
-            gen_flags = self.flag_encoder(
-                torch.tensor(1).to(pcpt_values.device)
-            ).expand(gen_genes.shape[0], gen_genes.shape[1], -1)
+            gen_flags = self.flag_encoder(torch.tensor(1).to(pcpt_expr.device)).expand(
+                gen_gene.shape[0], gen_gene.shape[1], -1
+            )
 
             gen_total_embs = gen_token_embs + gen_flags
         else:
@@ -253,13 +326,13 @@ class TransformerModel(nn.Module):
             pcpt_total_embs = self.dsbn(
                 pcpt_total_embs.permute(0, 2, 1), batch_label
             ).permute(0, 2, 1)
-            if gen_genes is not None:
+            if gen_gene is not None:
                 gen_total_embs = self.dsbn(
                     gen_total_embs.permute(0, 2, 1), batch_label
                 ).permute(0, 2, 1)
         # else:
         #     pcpt_total_embs = self.bn(pcpt_total_embs.permute(0, 2, 1)).permute(0, 2, 1)
-        #     if gen_genes is not None:
+        #     if gen_gene is not None:
         #         gen_total_embs = self.bn(gen_total_embs.permute(0, 2, 1)).permute(
         #             0, 2, 1
         #         )
@@ -353,12 +426,12 @@ class TransformerModel(nn.Module):
         else:
             total_embs = src
 
-        if getattr(self, "dsbn", None) is not None:
+        if self.domain_spec_batchnorm:
             batch_label = int(batch_labels[0].item())
             total_embs = self.dsbn(total_embs.permute(0, 2, 1), batch_label).permute(
                 0, 2, 1
             )  # the batch norm always works on dim 1
-        elif getattr(self, "bn", None) is not None:
+        else:
             total_embs = self.bn(total_embs.permute(0, 2, 1)).permute(0, 2, 1)
 
         total_embs[:, 0, :] = cell_emb
@@ -439,36 +512,49 @@ class TransformerModel(nn.Module):
 
         return output
 
+    # def forward(
+    #     self,
+    #     *args,
+    #     **kwargs,
+    # ) -> scGPT_ModelOutput:
+    #     """
+    #     Wrapper to call either generative_forward or perceptual_forward, depending
+    #     on the value of the "generative_training" kwarg.
+    #     """
+
+    #     # get the generative training flag and pop it out
+    #     do_generative_training = kwargs.pop("generative_training")
+    #     if do_generative_training:
+    #         model_output = self.generative_forward(*args, **kwargs)
+    #         return scGPT_ModelOutput(**model_output)
+    #     else:
+    #         model_output = self.perceptual_forward(*args, **kwargs)
+    #         return scGPT_ModelOutput(**model_output)
+
     def forward(
         self,
         *args,
         **kwargs,
-    ) -> Mapping[str, Tensor]:
+    ) -> scGPT_ModelOutput:
         """
         Wrapper to call either generative_forward or perceptual_forward, depending
         on the value of the "generative_training" kwarg.
         """
-        if "generative_training" not in kwargs:
-            # raise ValueError("generative_training kwarg is required")
-            warnings.warn(
-                "generative_training kwarg is required but not provided! "
-                "Using False and calling perceptual_forward instead"
-            )
-            return self.perceptual_forward(*args, **kwargs)
 
-        # get the generative training flag and pop it out
-        do_generative_training = kwargs.pop("generative_training")
+        do_generative_training = self.use_generative_training
         if do_generative_training:
-            return self.generative_forward(*args, **kwargs)
+            model_output = self.generative_forward(**kwargs)
+            return scGPT_ModelOutput(**model_output)
         else:
-            return self.perceptual_forward(*args, **kwargs)
+            model_output = self.perceptual_forward(**kwargs)
+            return scGPT_ModelOutput(**model_output)
 
     def generative_forward(
         self,
-        pcpt_genes: Tensor,
-        pcpt_values: Tensor,
+        pcpt_gene: Tensor,
+        pcpt_expr: Tensor,
         pcpt_key_padding_mask: Tensor,
-        gen_genes: Tensor,
+        gen_gene: Tensor,
         gen_key_padding_mask: Tensor,
         batch_labels: Optional[Tensor] = None,
         CLS: bool = False,
@@ -477,18 +563,19 @@ class TransformerModel(nn.Module):
         ECS: bool = False,
         do_sample: bool = False,
         input_cell_emb: Optional[Tensor] = None,
+        **kwargs,
     ) -> Mapping[str, Tensor]:
         """
         Args:
-            pcpt_genes (:obj:`Tensor`): token ids of the perceptual part, shape
+            pcpt_gene (:obj:`Tensor`): token ids of the perceptual part, shape
                 [batch_size, seq_len]
-            pcpt_values (:obj:`Tensor`): token values of the perceptual part, shape
+            pcpt_expr (:obj:`Tensor`): token values of the perceptual part, shape
                 [batch_size, seq_len]
-            pcpt_key_padding_mask (:obj:`Tensor`): mask for pcpt_genes, shape
+            pcpt_key_padding_mask (:obj:`Tensor`): mask for pcpt_gene, shape
                 [batch_size, seq_len]
-            gen_genes (:obj:`Tensor`): token ids of the generative part, shape
+            gen_gene (:obj:`Tensor`): token ids of the generative part, shape
                 [batch_size, seq_len]
-            gen_key_padding_mask (:obj:`Tensor`): mask for gen_genes, shape
+            gen_key_padding_mask (:obj:`Tensor`): mask for gen_gene, shape
                 [batch_size, seq_len]
             batch_labels (:obj:`Tensor`): batch labels, shape [batch_size]
             do_sample (:obj:`bool`): whether to do sampling from bernoulli for
@@ -504,10 +591,10 @@ class TransformerModel(nn.Module):
         """
 
         pcpt_output, gen_output = self.transformer_generate(
-            pcpt_genes,
-            pcpt_values,
+            pcpt_gene,
+            pcpt_expr,
             pcpt_key_padding_mask,
-            gen_genes,
+            gen_gene,
             gen_key_padding_mask,
             batch_labels,
             input_cell_emb=input_cell_emb,
@@ -534,12 +621,12 @@ class TransformerModel(nn.Module):
         if self.explicit_zero_prob and do_sample:
             bernoulli = Bernoulli(probs=decoder_output["zero_probs"])
             full_preds = bernoulli.sample() * decoder_output["pred"]
-            output["pcpt_preds"] = full_preds[:, : pcpt_genes.shape[1]]
-            output["gen_preds"] = full_preds[:, pcpt_genes.shape[1] :]
+            output["pcpt_preds"] = full_preds[:, : pcpt_gene.shape[1]]
+            output["gen_preds"] = full_preds[:, pcpt_gene.shape[1] :]
         else:
             full_preds = decoder_output["pred"]  # (batch, seq_len)
-            output["pcpt_preds"] = full_preds[:, : pcpt_genes.shape[1]]
-            output["gen_preds"] = full_preds[:, pcpt_genes.shape[1] :]
+            output["pcpt_preds"] = full_preds[:, : pcpt_gene.shape[1]]
+            output["gen_preds"] = full_preds[:, pcpt_gene.shape[1] :]
         if self.explicit_zero_prob:
             output["zero_probs"] = decoder_output["zero_probs"]
 
@@ -828,9 +915,6 @@ class FlashTransformerEncoderLayer(nn.Module):
             attention_dropout=dropout,
             **factory_kwargs,
         )
-        # Version compatibility workaround
-        if not hasattr(self.self_attn, "batch_first"):
-            self.self_attn.batch_first = batch_first
         # Implementation of Feedforward model
         self.linear1 = nn.Linear(d_model, dim_feedforward, **factory_kwargs)
         self.dropout = nn.Dropout(dropout)
@@ -972,7 +1056,7 @@ class ContinuousValueEncoder(nn.Module):
         # expand last dimension
         x = x.unsqueeze(-1)
         # clip x to [-inf, max_value]
-        x = torch.clamp(x, max=self.max_value) # should use own data chk; TODO: REMOVE THIS? 
+        x = torch.clamp(x, max=self.max_value)
         x = self.activation(self.linear1(x))
         x = self.linear2(x)
         x = self.norm(x)
@@ -1283,3 +1367,22 @@ class AdversarialDiscriminator(nn.Module):
         for layer in self._decoder:
             x = layer(x)
         return self.out_layer(x)
+
+
+class scGPT_ForClassification(scGPT_ForPretraining):
+    def __init__(
+        self,
+        config,
+        num_classes: int,
+        use_generative_training: bool = False,
+    ):
+        super().__init__(config)
+
+        self.cls_decoder = ClsDecoder(
+            d_model=config.d_model,
+            n_cls=num_classes,
+            nlayers=3,
+            activation=nn.LeakyReLU,
+        )
+        self.use_generative_training = use_generative_training
+        raise NotImplementedError
