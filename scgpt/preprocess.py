@@ -236,7 +236,11 @@ class Preprocessor:
         return True
 
 
+<<<<<<< HEAD
 def _digitize(x: np.ndarray, bins: np.ndarray, side="both") -> np.ndarray:
+=======
+def _digitize(x: np.ndarray, bins: np.ndarray, side="one") -> np.ndarray:
+>>>>>>> upstream/dev-temp
     """
     Digitize the data into bins. This method spreads data uniformly when bins
     have same values.

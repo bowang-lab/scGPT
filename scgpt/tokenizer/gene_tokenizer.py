@@ -303,9 +303,13 @@ def tokenize_batch(
         if return_pt:
             genes = torch.from_numpy(genes).long()
             values = torch.from_numpy(values).float()
+<<<<<<< HEAD
             if mod_type is not None:
                 mod_types = torch.from_numpy(mod_types).long()
         tokenized_data.append((genes, values, mod_types))
+=======
+        tokenized_data.append((genes, values))
+>>>>>>> upstream/dev-temp
     return tokenized_data
 
 
