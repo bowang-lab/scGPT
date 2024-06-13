@@ -177,6 +177,7 @@ class TransformerModel(nn.Module):
         self.cur_gene_token_embs = src
 
         values = self.value_encoder(values)  # (batch, seq_len, embsize)
+        # Question: why mess with these values at all?
         if self.input_emb_style == "scaling":
             values = values.unsqueeze(2)
             total_embs = src * values
@@ -785,7 +786,7 @@ class ContinuousValueEncoder(nn.Module):
         # expand last dimension
         x = x.unsqueeze(-1)
         # clip x to [-inf, max_value]
-        x = torch.clamp(x, max=self.max_value)
+        x = torch.clamp(x, max=self.max_value) # should use own data chk; TODO: REMOVE THIS? 
         x = self.activation(self.linear1(x))
         x = self.linear2(x)
         x = self.norm(x)

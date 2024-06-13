@@ -4,6 +4,14 @@ import torch
 from torch import nn
 
 # The code is modified from https://github.com/wgchang/DSBN/blob/master/model/dsbn.py
+
+"""
+unfortunately, the scGPT authors don't properly cite the paper implementing this domain adaptation thing
+this should be cited: https://arxiv.org/abs/1906.03950
+
+"""
+
+
 class _DomainSpecificBatchNorm(nn.Module):
     _version = 2
 
