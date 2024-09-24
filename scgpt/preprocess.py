@@ -179,7 +179,7 @@ class Preprocessor:
             binned_rows = []
             bin_edges = []
             layer_data = _get_obs_rep(adata, layer=key_to_process)
-            layer_data = layer_data.A if issparse(layer_data) else layer_data
+            layer_data = layer_data.toarray() if issparse(layer_data) else layer_data
             if layer_data.min() < 0:
                 raise ValueError(
                     f"Assuming non-negative data, but got min value {layer_data.min()}."
