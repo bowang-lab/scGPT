@@ -35,7 +35,7 @@ requires = [
 
 [tool.setuptools]
 packages = ["scgpt"]
-3[project.optional-dependencies]
+[project.optional-dependencies]
 build =["torch", "setuptools", "packaging"]
 flash-attn = ["flash-attn"]
 
@@ -55,5 +55,5 @@ no-build-isolation-package = ["flash-attn"]
 
 [[tool.uv.dependency-metadata]]
 name = "flash-attn"
-version = ">=1.0.1,<1.0.5"
+version = "1.0.4"
 requires-dist = ["torch", "einops"]

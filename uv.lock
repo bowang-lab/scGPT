@@ -7,6 +7,13 @@ resolution-markers = [
     "python_full_version < '3.9' and sys_platform != 'win32'",
 ]
 
+[manifest]
+
+[[manifest.dependency-metadata]]
+name = "flash-attn"
+version = "1.0.4"
+requires-dist = ["torch", "einops"]
+
 [[package]]
 name = "absl-py"
 version = "2.1.0"
@@ -870,7 +877,6 @@ version = "1.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "einops" },
-    { name = "packaging" },
     { name = "torch" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/25/0f/80f16a741e328342ed4e9b3c010ec87f0ef939a71154b7b8bd22d70a0bb8/flash_attn-1.0.4.tar.gz", hash = "sha256:958d3ebaa9c8f834845af5f4579c973bacbf4acd8fef5563ca2336740b6936fe", size = 2035186 }
@@ -3700,7 +3706,7 @@ dev = [
 requires-dist = [
     { name = "cell-gears", specifier = "<0.0.3" },
     { name = "datasets", specifier = ">=2.3.0,<3.0.0" },
-    { name = "flash-attn", marker = "extra == 'flash-attn'", specifier = ">=1.0.1,<1.0.5" },
+    { name = "flash-attn", marker = "extra == 'flash-attn'" },
     { name = "leidenalg", specifier = ">=0.8.10" },
     { name = "numba", specifier = ">=0.55.1" },
     { name = "orbax", specifier = "<0.1.8" },
