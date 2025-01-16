@@ -23,6 +23,10 @@ dependencies = [
     "orbax <0.1.8",
 ]
 
+[project.optional-dependencies]
+build = ["torch", "setuptools", "packaging"]
+compile = ["flash-attn"]
+
 [project.urls]
 Repository = "https://github.com/bowang-lab/scGPT"
 Homepage = "https://github.com/bowang-lab/scGPT"
@@ -35,9 +39,6 @@ requires = [
 
 [tool.setuptools]
 packages = ["scgpt"]
-[project.optional-dependencies]
-build =["torch", "setuptools", "packaging"]
-flash-attn = ["flash-attn"]
 
 [tool.uv]
 managed = true

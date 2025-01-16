@@ -3686,7 +3686,7 @@ build = [
     { name = "setuptools", version = "75.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "torch" },
 ]
-flash-attn = [
+compile = [
     { name = "flash-attn" },
 ]
 
@@ -3706,7 +3706,7 @@ dev = [
 requires-dist = [
     { name = "cell-gears", specifier = "<0.0.3" },
     { name = "datasets", specifier = ">=2.3.0,<3.0.0" },
-    { name = "flash-attn", marker = "extra == 'flash-attn'" },
+    { name = "flash-attn", marker = "extra == 'compile'" },
     { name = "leidenalg", specifier = ">=0.8.10" },
     { name = "numba", specifier = ">=0.55.1" },
     { name = "orbax", specifier = "<0.1.8" },
