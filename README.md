@@ -53,6 +53,7 @@ $ cd scGPT
 $ uv sync
 
 # Install flash-attn
+$ uv sync --extra build # Setup flash-attn build reqs
 $ uv sync --extra build --extra compile # Install flash-attn
 
 # Activate virtual environment
