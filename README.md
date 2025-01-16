@@ -27,7 +27,7 @@ scGPT is now available at the following online apps as well, so you can get star
 
 ## Installation
 
-scGPT works with Python >= 3.7.13 and R >=3.6.1. Please make sure you have the correct version of Python and R installed pre-installation.
+scGPT works with Python >= 3.8 and R >=3.6.1. Please make sure you have the correct version of Python and R installed pre-installation.
 
 scGPT is available on PyPI. To install scGPT, run the following command:
 
@@ -43,12 +43,20 @@ pip install scgpt "flash-attn<1.0.5"  # optional, recommended
 pip install wandb
 ```
 
-For developing, we are using the [Poetry](https://python-poetry.org/) package manager. To install Poetry, follow the instructions [here](https://python-poetry.org/docs/#installation).
+For developing, we are using the [uv](https://docs.astral.sh/uv/#getting-started) package manager. To install Poetry, follow the instructions [here](https://docs.astral.sh/uv/getting-started/installation).
 
 ```bash
 $ git clone this-repo-url
 $ cd scGPT
-$ poetry install
+$ uv sync
+
+# Activate virtual environment
+
+## Linux/Unix
+. .venv/bin/activate
+
+## Windows
+. .venv/Scripts/activate
 ```
 
 **Note**: The `flash-attn` dependency usually requires specific GPU and CUDA version. If you encounter any issues, please refer to the [flash-attn](https://github.com/HazyResearch/flash-attention/tree/main) repository for installation instructions. For now, May 2023, we recommend using CUDA 11.7 and flash-attn<1.0.5 due to various issues reported about installing new versions of flash-attn.
