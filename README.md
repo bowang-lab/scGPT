@@ -48,7 +48,13 @@ For developing, we are using the [uv](https://docs.astral.sh/uv/#getting-started
 ```bash
 $ git clone this-repo-url
 $ cd scGPT
+
+# Install without flash-attn
 $ uv sync
+
+# Install flash-attn
+$ uv sync --extra build # Setup flash-attn build environment
+$ uv sync --extra build --extra comile # Install flash-attn
 
 # Activate virtual environment
 
