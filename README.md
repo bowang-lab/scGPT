@@ -54,7 +54,7 @@ $ uv sync
 
 # Install flash-attn
 $ uv sync --extra build # Setup flash-attn build environment
-$ uv sync --extra build --extra comile # Install flash-attn
+$ uv sync --extra build --extra compile # Install flash-attn
 
 # Activate virtual environment
 
