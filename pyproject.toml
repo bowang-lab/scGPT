@@ -37,7 +37,7 @@ requires = [
 packages = ["scgpt"]
 3[project.optional-dependencies]
 build =["torch", "setuptools", "packaging"]
-flash-attn = ["flash-attn >=1.0.1,<1.0.5"]
+flash-attn = ["flash-attn"]
 
 [tool.uv]
 managed = true
@@ -51,7 +51,7 @@ dev-dependencies = [
     "plotly >=5.3.1,<6.0.0",
 ]
 
-no-build-isolation-package = ["flash-attn >=1.0.1,<1.0.5"]
+no-build-isolation-package = ["flash-attn"]
 
 [[tool.uv.dependency-metadata]]
 name = "flash-attn"
