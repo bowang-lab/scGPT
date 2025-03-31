@@ -508,7 +508,7 @@ def test(
     model: nn.Module, adata: DataLoader, gene_ids, vocab, config, device, logger
 ) -> float:
     all_counts = (
-        adata.layers[config.input_layer_key].A
+        adata.layers[config.input_layer_key].toarray()
         if issparse(adata.layers[config.input_layer_key])
         else adata.layers[config.input_layer_key]
     )
@@ -602,7 +602,7 @@ def eval_testdata(
     adata_t = adata_t.copy()
 
     all_counts = (
-        adata_t.layers[config.input_layer_key].A
+        adata_t.layers[config.input_layer_key].toarray()
         if issparse(adata_t.layers[config.input_layer_key])
         else adata_t.layers[config.input_layer_key]
     )

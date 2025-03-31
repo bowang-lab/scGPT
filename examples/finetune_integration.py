@@ -161,9 +161,9 @@ if config.load_model is not None:
     nlayers = model_configs["nlayers"]
     n_layers_cls = model_configs["n_layers_cls"]
 else:
-    embsize = config.layer_size 
+    embsize = config.layer_size
     nhead = config.nhead
-    nlayers = config.nlayers  
+    nlayers = config.nlayers
     d_hid = config.layer_size
 
 
@@ -195,7 +195,7 @@ if per_seq_batch_sample:
 # %%
 input_layer_key = "X_binned"
 all_counts = (
-    adata.layers[input_layer_key].A
+    adata.layers[input_layer_key].toarray()
     if issparse(adata.layers[input_layer_key])
     else adata.layers[input_layer_key]
 )
@@ -618,7 +618,7 @@ def eval_testdata(
     adata_t = adata_t.copy()
 
     all_counts = (
-        adata_t.layers[input_layer_key].A
+        adata_t.layers[input_layer_key].toarray()
         if issparse(adata_t.layers[input_layer_key])
         else adata_t.layers[input_layer_key]
     )
