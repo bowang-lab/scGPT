@@ -7,6 +7,8 @@ import scanpy as sc
 from scanpy.get import _get_obs_rep, _set_obs_rep
 from anndata import AnnData
 
+from copy import deepcopy
+
 from scgpt import logger
 
 
@@ -144,7 +146,7 @@ class Preprocessor:
             if self.result_log1p_key:
                 _set_obs_rep(
                     adata,
-                    _get_obs_rep(adata, layer=key_to_process),
+                    deepcopy(_get_obs_rep(adata, layer=key_to_process)),
                     layer=self.result_log1p_key,
                 )
                 key_to_process = self.result_log1p_key
@@ -178,7 +180,7 @@ class Preprocessor:
             n_bins = self.binning  # NOTE: the first bin is always a spectial for zero
             binned_rows = []
             bin_edges = []
-            layer_data = _get_obs_rep(adata, layer=key_to_process)
+            layer_data = deepcopy(_get_obs_rep(adata, layer=key_to_process))
             layer_data = layer_data.toarray() if issparse(layer_data) else layer_data
             if layer_data.min() < 0:
                 raise ValueError(
