@@ -249,7 +249,7 @@ def _digitize(x: np.ndarray, bins: np.ndarray, side="both") -> np.ndarray:
         The bins to use for digitization, in increasing order.
     side (:class:`str`, optional):
         The side to use for digitization. If "one", the left side is used. If
-        "both", the left and right side are used. Default to "one".
+        "both", the left and right side are used. Default to "both".
 
     Returns:
 
