@@ -8,9 +8,9 @@
 
 
 
-INDEX_PATH="path/to/index"
-QUERY_PATH="path/to/query"
-DATA_PATH="path/to/data"
+INDEX_PATH="/home/hauke.schuele/scGPT_main/data"
+QUERY_PATH="/home/hauke.schuele/scGPT_main/data/cellxgene/query_list_original.txt"
+DATA_PATH="/home/hauke.schuele/scGPT_main/data/cellxgene"
 
 cd $DATA_PATH
 

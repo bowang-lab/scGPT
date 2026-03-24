@@ -10,7 +10,7 @@ from typing import Dict, List, Optional
 import warnings
 import numpy as np
 import os
-
+from tqdm import tqdm
 import scanpy as sc
 
 import sys
@@ -41,6 +41,12 @@ parser.add_argument(
     type=str,
     nargs="*",
     help="Space separated file names to include, default to all files in input_dir",
+)
+parser.add_argument(
+    "--exclude-files",
+    type=str,
+    nargs="*",
+    help="Space separated file names to exclude, default to None",
 )
 parser.add_argument(
     "--metainfo",
@@ -101,6 +107,8 @@ files = [f for f in input_dir.glob("*.h5ad")]
 print(f"Found {len(files)} files in {input_dir}")
 if args.include_files is not None:
     files = [f for f in files if f.name in args.include_files]
+if args.exclude_files is not None:
+    files = [f for f in files if f.name not in args.exclude_files]
 if args.metainfo is not None:
     metainfo = json.load(open(args.metainfo))
     files = [f for f in files if f.stem in metainfo]
@@ -109,11 +117,13 @@ if args.metainfo is not None:
         for f in files
         if "include_disease" in metainfo[f.stem]
     }
-
+print(f"Processing {len(files)} files after filtering: {json.dumps([f.name for f in files], indent=2)}")
 if args.vocab_file is None:
     vocab = scg.tokenizer.get_default_gene_vocab()
+    print(f"Using default vocabulary with {len(vocab)} genes")
 else:
     vocab = scg.tokenizer.GeneVocab.from_file(args.vocab_file)
+    print(f"Loaded vocabulary from {args.vocab_file} with {len(vocab)} genes")
 
 # %% [markdown]
 # # preprocessing data
@@ -177,7 +187,7 @@ def preprocess(
 # %%
 main_table_key = "counts"
 token_col = "feature_name"
-for f in files:
+for f in tqdm(files, desc="Processing files"):
     try:
         adata = sc.read(f, cache=True)
         adata = preprocess(adata, main_table_key, N=args.N)
@@ -209,11 +219,11 @@ for f in files:
         shutil.rmtree(output_dir / f"{f.stem}.scb", ignore_errors=True)
 
 # or run scbank.DataBank.batch_from_anndata(files, to=args.output_dir)
-# %%
+# 
 # test loading from disk
 # db = scbank.DataBank.from_path(args.output_dir)
 
-# %% run this to copy all parquet datatables to a single directory
+#  run this to copy all parquet datatables to a single directory
 target_dir = output_dir / f"all_{main_table_key}"
 target_dir.mkdir(exist_ok=True)
 for f in files:
@@ -221,4 +231,7 @@ for f in files:
         output_dir / f"{f.stem}.scb" / f"{main_table_key}.datatable.parquet"
     )
     if output_parquet_dt.exists():
+        print(f"linking {output_parquet_dt} to {target_dir / f'{f.stem}.datatable.parquet'}")
         os.symlink(output_parquet_dt, target_dir / f"{f.stem}.datatable.parquet")
+    else:
+        warnings.warn(f"file {output_parquet_dt} does not exist, skipping")
