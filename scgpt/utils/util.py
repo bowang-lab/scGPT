@@ -4,6 +4,7 @@ import logging
 import os
 from pathlib import Path
 import random
+import re
 import subprocess
 from typing import Dict, List, Mapping, Optional, Tuple, Union
 
@@ -327,11 +328,27 @@ def load_pretrained(
         torch.nn.Module: The model with pretrained weights.
     """
 
+    pretrained_params = dict(pretrained_params)
+
     use_flash_attn = getattr(model, "use_fast_transformer", True)
     if not use_flash_attn:
-        pretrained_params = {
-            k.replace("Wqkv.", "in_proj_"): v for k, v in pretrained_params.items()
+        rename_rules = {
+            r"self_attn\._impl\.Wqkv\.": "self_attn.in_proj_",
+            r"self_attn\.Wqkv\.": "self_attn.in_proj_",
+            r"self_attn\._impl\.out_proj\.": "self_attn.out_proj.",
         }
+        pretrained_params = {
+            _rename_key(k, rename_rules): v for k, v in pretrained_params.items()
+        }
+    else:
+        # Import locally to avoid a model <-> utils import cycle at module import time.
+        from ..model.flash_attn_compat import get_flash_attn_parameter_rename_rules
+
+        rename_rules = get_flash_attn_parameter_rename_rules(pretrained_params)
+        if rename_rules:
+            pretrained_params = {
+                _rename_key(k, rename_rules): v for k, v in pretrained_params.items()
+            }
 
     if prefix is not None and len(prefix) > 0:
         if isinstance(prefix, str):
@@ -363,6 +380,12 @@ def load_pretrained(
         model.load_state_dict(model_dict)
 
     return model
+
+
+def _rename_key(key: str, rename_rules: Mapping[str, str]) -> str:
+    for pattern, replacement in rename_rules.items():
+        key = re.sub(pattern, replacement, key)
+    return key
 
 
 # Wrapper for all scib metrics, we leave out some metrics like hvg_score, cell_cyvle,

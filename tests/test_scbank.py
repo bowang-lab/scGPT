@@ -1,5 +1,6 @@
 from pathlib import Path
 import tempfile
+import shutil
 
 import numpy as np
 import pytest
@@ -16,9 +17,12 @@ save_path.mkdir(parents=True, exist_ok=True)
 
 
 def clear_files(directory: Path):
-    """helper function to clear files in a dir"""
+    """helper function to clear files and directories in a dir"""
     for f in directory.iterdir():
-        f.unlink()
+        if f.is_dir():
+            shutil.rmtree(f)
+        else:
+            f.unlink()
 
 
 def test_empty_databank():
@@ -190,7 +194,7 @@ def test_databank_load_anndata():
 
     # test loading from anndata
     db = DataBank(
-        meta_info=MetaInfo(on_disk_format=save_path),
+        meta_info=MetaInfo(on_disk_path=save_path),
         gene_vocab=GeneVocab.from_dict(gene_vocab),
     )
     data_tables = db.load_anndata(adata, data_keys=["X"], token_col="gene")

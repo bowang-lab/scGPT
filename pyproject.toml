@@ -1,40 +1,61 @@
-[tool.poetry]
-name = "scGPT"
-version = "0.2.4"
-description = "Large-scale generative pretrain of single cell using transformer."
-license = "MIT"
-authors = ["Haotian <subercui@gmail.com>"]
-repository = "https://github.com/bowang-lab/scGPT"
-homepage = "https://github.com/bowang-lab/scGPT"
-readme = "README.md"
-
-[tool.poetry.dependencies]
-python = ">=3.7.12,<4"
-pandas = ">=1.3.5"
-scvi-tools = ">=0.16.0,<1.0"
-scanpy = "^1.9.1"
-torch = ">=1.13.0"
-torchtext = "*"
-numba = ">=0.55.1"
-scikit-misc = ">=0.1.4"
-umap-learn = ">=0.5.3"
-leidenalg = ">=0.8.10"
-datasets = "^2.3.0"
-typing-extensions = "^4.2.0"
-scib = "^1.0.3"
-cell-gears = "<0.0.3"
-orbax = "<0.1.8"
-
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
-black = "^22.3.0"
-tensorflow = "^2.8.0"
-flash-attn = "^1.0.1"
-torch-geometric = "^2.3.0"
-dcor = "~0.5.3"
-wandb = "^0.12.3"
-plotly = "^5.3.1"
-
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scGPT"
+version = "0.2.5"
+description = "Large-scale generative pretrain of single cell using transformer."
+readme = "README.md"
+requires-python = ">=3.7.12,<4"
+license = { text = "MIT" }
+authors = [
+	{ name = "Haotian", email = "subercui@gmail.com" },
+]
+dependencies = [
+	"pandas>=1.3.5",
+	"pyarrow>=22.0.0",
+	"scvi-tools>=0.16.0,<1.0",
+	"scanpy>=1.9.1,<2.0.0",
+	"torch>=1.13.0",
+	"numba>=0.55.1",
+	"scikit-misc>=0.1.4",
+	"umap-learn>=0.5.3",
+	"leidenalg>=0.8.10",
+	"datasets>=2.20.0,<3",
+	"typing-extensions>=4.2.0,<5.0.0",
+	"scib>=1.0.3,<2.0.0",
+	"cell-gears<0.0.3",
+	"orbax<0.1.8",
+]
+
+[project.optional-dependencies]
+fa2 = [
+	"torch>=2.2.0",
+	"flash-attn>=2.8.0",
+	"einops>=0.6.0",
+]
+
+dev = [
+	"pytest>=7.4,<9.0.0",
+	"black>=24.0.0,<26.0.0",
+	"tensorflow>=2.8.0,<3.0.0",
+	"torch-geometric>=2.3.0,<3.0.0",
+	"dcor>=0.5.3,<0.6.0",
+	"wandb>=0.17.0,<1.0.0",
+	"plotly>=5.20.0,<7.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/bowang-lab/scGPT"
+Repository = "https://github.com/bowang-lab/scGPT"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scgpt*"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+scgpt = ["tokenizer/*.json"]

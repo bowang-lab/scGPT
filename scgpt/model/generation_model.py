@@ -1,5 +1,6 @@
 import os
 import math
+import warnings
 from typing import Mapping, Optional, Tuple, Any, Union
 
 import torch
@@ -20,6 +21,7 @@ from .model import (
 )
 from ..utils import map_raw_id_to_vocab_id
 from .. import logger
+from .flash_attn_compat import flash_attn_available
 
 
 class TransformerGenerator(nn.Module):
@@ -64,18 +66,13 @@ class TransformerGenerator(nn.Module):
         self.norm_scheme = "pre" if pre_norm else "post"
         if cell_emb_style not in ["cls", "avg-pool", "w-pool"]:
             raise ValueError(f"Unknown cell_emb_style: {cell_emb_style}")
-        if use_fast_transformer:
-            try:
-                from flash_attn.flash_attention import FlashMHA
-            except ImportError:
-                import warnings
-
-                warnings.warn(
-                    "flash-attn is not installed, using pytorch transformer instead. "
-                    "Set use_fast_transformer=False to avoid this warning. "
-                    "Installing flash-attn is highly recommended."
-                )
-                use_fast_transformer = False
+        if use_fast_transformer and not flash_attn_available:
+            warnings.warn(
+                "flash-attn is not installed, using pytorch transformer instead. "
+                "Set use_fast_transformer=False to avoid this warning. "
+                "Installing flash-attn is highly recommended."
+            )
+            use_fast_transformer = False
         self.use_fast_transformer = use_fast_transformer
 
         self.encoder = GeneEncoder(ntoken, d_model, padding_idx=vocab[pad_token])

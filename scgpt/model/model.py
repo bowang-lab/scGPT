@@ -1,5 +1,6 @@
 import gc
 import math
+import warnings
 from typing import Dict, Mapping, Optional, Tuple, Any, Union
 
 import torch
@@ -11,15 +12,7 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 from torch.distributions import Bernoulli
 from tqdm import trange
 
-try:
-    from flash_attn.flash_attention import FlashMHA
-
-    flash_attn_available = True
-except ImportError:
-    import warnings
-
-    warnings.warn("flash_attn is not installed")
-    flash_attn_available = False
+from .flash_attn_compat import FlashMHA, flash_attn_available
 
 from .dsbn import DomainSpecificBatchNorm1d
 from .grad_reverse import grad_reverse
@@ -699,7 +692,8 @@ class FlashTransformerEncoderLayer(nn.Module):
         else:
             if src_key_padding_mask.dtype != torch.bool:
                 src_key_padding_mask = src_key_padding_mask.bool()
-            # NOTE: the FlashMHA uses mask 0 for padding tokens, which is the opposite
+            # PyTorch convention: True=padding. flash-attn convention: True=keep.
+            # Invert here so FlashMHA receives True for valid tokens.
             src_key_padding_mask_ = ~src_key_padding_mask
 
         if self.norm_scheme == "pre":
