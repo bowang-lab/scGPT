@@ -27,14 +27,45 @@ scGPT is now available at the following online apps as well, so you can get star
 
 ## Installation
 
-scGPT works with Python >= 3.7.13 and R >=3.6.1. Please make sure you have the correct version of Python and R installed pre-installation.
+scGPT requires Python >= 3.10.
 
-scGPT is available on PyPI. To install scGPT, run the following command:
+### Quick install (pip)
 
 ```bash
-pip install scgpt "flash-attn<1.0.5"  # optional, recommended
-# As of 2023.09, pip install may not run with new versions of the google orbax package, if you encounter related issues, please use the following command instead:
-# pip install scgpt "flash-attn<1.0.5" "orbax<0.1.8"
+pip install scgpt
+```
+
+### With FlashAttention (modern pytorch already has native support for flash-attn kernels, but this is optional for older versions)
+
+```bash
+pip install "scgpt[fa2]"
+```
+
+This installs flash-attn >= 2.8.0 for faster attention on CUDA GPUs. See the [flash-attn](https://github.com/Dao-AILab/flash-attention) repository for CUDA version requirements.
+
+### Optional extras
+
+```bash
+pip install "scgpt[scbank]"    # scBank data management (requires HuggingFace datasets)
+pip install "scgpt[eval]"      # scIB evaluation metrics
+pip install "scgpt[perturb]"   # perturbation analysis (cell-gears)
+```
+
+### Development (from source with uv)
+
+We use [uv](https://docs.astral.sh/uv/) for development environment management:
+
+```bash
+git clone https://github.com/bowang-lab/scGPT.git
+cd scGPT
+uv sync --extra dev            # install core + dev tools
+uv run pytest tests/ -v        # run tests
+```
+
+To install all optional dependencies for development:
+
+```bash
+uv sync --extra dev --extra scbank --extra eval
 ```
 
 [Optional] We recommend using [wandb](https://wandb.ai/) for logging and visualization.
@@ -42,16 +73,6 @@ pip install scgpt "flash-attn<1.0.5"  # optional, recommended
 ```bash
 pip install wandb
 ```
-
-The poetry installation is out of sync. Please use pip install instead. ~~For developing, we are using the [Poetry](https://python-poetry.org/) package manager. To install Poetry, follow the instructions [here](https://python-poetry.org/docs/#installation).~~
-
-```bash
-$ git clone this-repo-url
-$ cd scGPT
-$ poetry install
-```
-
-**Note**: The `flash-attn` dependency usually requires specific GPU and CUDA version. If you encounter any issues, please refer to the [flash-attn](https://github.com/HazyResearch/flash-attention/tree/main) repository for installation instructions. For now, May 2023, we recommend using CUDA 11.7 and flash-attn<1.0.5 due to various issues reported about installing new versions of flash-attn.
 
 ## Pretrained scGPT Model Zoo
 
