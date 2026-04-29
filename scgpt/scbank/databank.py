@@ -110,9 +110,11 @@ class DataBank:
 
         self._validate_vocab(gene_vocab)  # e.g. check md5 every time calling setter
         self._gene_vocab = gene_vocab
-        self.sync(  # sync to disk, update md5 in meta info
-            attr_keys=["gene_vocab"]
-        ) if self.settings.immediate_save else self.track(["gene_vocab"])
+        (
+            self.sync(attr_keys=["gene_vocab"])  # sync to disk, update md5 in meta info
+            if self.settings.immediate_save
+            else self.track(["gene_vocab"])
+        )
 
     @property
     def main_table_key(self) -> Optional[str]:
@@ -129,8 +131,10 @@ class DataBank:
         if self.meta_info is None:
             raise ValueError("Need to have self.meta_info if setting main table key.")
         self.meta_info.main_table_key = table_key
-        self.sync(["meta_info"]) if self.settings.immediate_save else self.track(
-            ["meta_info"]
+        (
+            self.sync(["meta_info"])
+            if self.settings.immediate_save
+            else self.track(["meta_info"])
         )
 
     @property
@@ -486,7 +490,7 @@ class DataBank:
 
         if token_col not in adata.var:
             raise ValueError(f"token_col {token_col} not found in adata.var.")
-        if not isinstance(adata.var[token_col][0], str):
+        if not isinstance(adata.var[token_col].iloc[0], str):
             raise ValueError(f"token_col {token_col} must be of type str.")
 
         # validate matching between tokens and vocab
