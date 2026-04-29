@@ -5,8 +5,10 @@ import shutil
 import numpy as np
 import pytest
 from scipy.sparse import csr_matrix
-from datasets import Dataset
 from anndata import AnnData
+
+datasets = pytest.importorskip("datasets")
+Dataset = datasets.Dataset
 
 from scgpt.tokenizer import GeneVocab
 from scgpt.scbank import DataBank, DataTable, MetaInfo, Setting

@@ -13,12 +13,7 @@ import torch
 # from transformers import AutoTokenizer, BertTokenizer
 
 from .. import logger
-from .vocab_compat import (
-    BuiltinVocab,
-    Vocab,
-    from_torchtext_vocab,
-    is_torchtext_vocab,
-)
+from .vocab_compat import Vocab, convert_legacy_vocab
 
 
 class GeneVocab(Vocab):
@@ -46,68 +41,29 @@ class GeneVocab(Vocab):
             default_token (str): Default token, by default will set to "<pad>",
                 if "<pad>" is in the vocabulary.
         """
-        default_index = None
-
         if isinstance(gene_list_or_vocab, list):
             tokens = self._build_tokens_from_iterator(
                 gene_list_or_vocab,
                 specials=specials,
                 special_first=special_first,
             )
-        elif isinstance(gene_list_or_vocab, BuiltinVocab):
-            self._check_specials(specials)
-            tokens = gene_list_or_vocab.get_itos()
-            default_index = gene_list_or_vocab.get_default_index()
-        elif is_torchtext_vocab(gene_list_or_vocab):
-            self._check_specials(specials)
-            # Legacy torchtext path expects the internal vocab handle.
-            if Vocab is not BuiltinVocab:
-                super().__init__(gene_list_or_vocab.vocab)
-                default_index = gene_list_or_vocab.get_default_index()
-                if default_index is not None and default_index >= 0:
-                    self.set_default_index(default_index)
-                tokens = None
-            else:
-                converted = from_torchtext_vocab(gene_list_or_vocab)
-                tokens = converted.get_itos()
-                default_index = converted.get_default_index()
+            super().__init__(tokens)
+        elif isinstance(gene_list_or_vocab, Vocab):
+            if specials is not None:
+                raise ValueError(
+                    "receive non-empty specials when init from a Vocab object."
+                )
+            super().__init__(
+                gene_list_or_vocab.get_itos(),
+                default_index=gene_list_or_vocab.get_default_index(),
+            )
         else:
             raise ValueError(
-                "gene_list_or_vocab must be a list of gene names, a Vocab, "
-                "or a torchtext Vocab object."
+                "gene_list_or_vocab must be a list of gene names or a Vocab object."
             )
-
-        if tokens is not None:
-            self._init_from_tokens(tokens, default_index=default_index)
 
         if default_token is not None and default_token in self:
             self.set_default_token(default_token)
-
-    @staticmethod
-    def _check_specials(specials: Optional[List[str]]) -> None:
-        if specials is not None:
-            raise ValueError(
-                "receive non-empty specials when init from a Vocab object."
-            )
-
-    def _init_from_tokens(
-        self,
-        tokens: List[str],
-        default_index: Optional[int] = None,
-    ) -> None:
-        """Initialize the active backend vocab from ordered tokens."""
-        if Vocab is BuiltinVocab:
-            super().__init__(tokens, default_index=default_index)
-            return
-
-        # torchtext-subclassable backend: build a torchtext vocab handle first.
-        from torchtext.vocab import vocab as build_tt_vocab
-
-        token_counts = OrderedDict((tok, 1) for tok in tokens)
-        tt_vocab = build_tt_vocab(token_counts, specials=[])
-        super().__init__(tt_vocab.vocab)
-        if default_index is not None and default_index >= 0:
-            self.set_default_index(default_index)
 
     @classmethod
     def from_file(cls, file_path: Union[Path, str]) -> Self:
@@ -120,7 +76,10 @@ class GeneVocab(Vocab):
         if file_path.suffix == ".pkl":
             with file_path.open("rb") as f:
                 vocab = pickle.load(f)
-                return cls(vocab)
+                if isinstance(vocab, cls):
+                    return vocab
+                converted = convert_legacy_vocab(vocab)
+                return cls.from_dict(converted.get_stoi())
         elif file_path.suffix == ".json":
             with file_path.open("r") as f:
                 token2idx = json.load(f)

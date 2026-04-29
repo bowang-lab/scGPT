@@ -14,6 +14,20 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-from .databank import DataBank
-from .data import *
 from .setting import Setting
+
+
+def __getattr__(name):
+    if name == "DataBank":
+        from .databank import DataBank
+
+        return DataBank
+    if name == "DataTable":
+        from .data import DataTable
+
+        return DataTable
+    if name == "MetaInfo":
+        from .data import MetaInfo
+
+        return MetaInfo
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

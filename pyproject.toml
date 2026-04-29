@@ -4,29 +4,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scGPT"
-version = "0.2.5"
+version = "0.3.0"
 description = "Large-scale generative pretrain of single cell using transformer."
 readme = "README.md"
-requires-python = ">=3.7.12,<4"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
 	{ name = "Haotian", email = "subercui@gmail.com" },
 ]
 dependencies = [
 	"pandas>=1.3.5",
-	"pyarrow>=22.0.0",
-	"scvi-tools>=0.16.0,<1.0",
 	"scanpy>=1.9.1,<2.0.0",
 	"torch>=1.13.0",
 	"numba>=0.55.1",
 	"scikit-misc>=0.1.4",
 	"umap-learn>=0.5.3",
 	"leidenalg>=0.8.10",
-	"datasets>=2.20.0,<3",
 	"typing-extensions>=4.2.0,<5.0.0",
-	"scib>=1.0.3,<2.0.0",
-	"cell-gears<0.0.3",
-	"orbax<0.1.8",
 ]
 
 [project.optional-dependencies]
@@ -36,14 +30,21 @@ fa2 = [
 	"einops>=0.6.0",
 ]
 
+scbank = [
+	"datasets>=2.20.0,<3",
+]
+
+eval = [
+	"scib>=1.0.3,<2.0.0",
+]
+
+perturb = [
+	"cell-gears<0.0.3",
+]
+
 dev = [
 	"pytest>=7.4,<9.0.0",
 	"black>=24.0.0,<26.0.0",
-	"tensorflow>=2.8.0,<3.0.0",
-	"torch-geometric>=2.3.0,<3.0.0",
-	"dcor>=0.5.3,<0.6.0",
-	"wandb>=0.17.0,<1.0.0",
-	"plotly>=5.20.0,<7.0.0",
 ]
 
 [project.urls]
