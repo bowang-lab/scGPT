@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 import torch
 from torch import nn
 
+
 # The code is modified from https://github.com/wgchang/DSBN/blob/master/model/dsbn.py
 class _DomainSpecificBatchNorm(nn.Module):
     _version = 2

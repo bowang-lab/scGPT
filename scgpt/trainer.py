@@ -222,9 +222,9 @@ def train(
                 input_gene_ids,
                 input_values,
                 src_key_padding_mask=src_key_padding_mask,
-                batch_labels=batch_labels
-                if config.use_batch_labels or config.DSBN
-                else None,
+                batch_labels=(
+                    batch_labels if config.use_batch_labels or config.DSBN else None
+                ),
                 CLS=config.CLS,
                 MVC=config.GEPC,
                 ECS=config.ESC,
@@ -415,9 +415,9 @@ def evaluate(
                     input_gene_ids,
                     input_values,
                     src_key_padding_mask=src_key_padding_mask,
-                    batch_labels=batch_labels
-                    if config.use_batch_labels or config.DSBN
-                    else None,
+                    batch_labels=(
+                        batch_labels if config.use_batch_labels or config.DSBN else None
+                    ),
                     CLS=config.CLS,  # evaluation does not need CLS or CCE
                     MVC=False,
                     ECS=False,
@@ -488,9 +488,9 @@ def predict(
                     input_gene_ids,
                     input_values,
                     src_key_padding_mask=src_key_padding_mask,
-                    batch_labels=batch_labels
-                    if config.use_batch_labels or config.DSBN
-                    else None,
+                    batch_labels=(
+                        batch_labels if config.use_batch_labels or config.DSBN else None
+                    ),
                     CLS=config.CLS,
                     MVC=config.GEPC,
                     ECS=config.ESC,
@@ -634,9 +634,11 @@ def eval_testdata(
                 all_values.float(),
                 src_key_padding_mask=src_key_padding_mask,
                 batch_size=config.batch_size,
-                batch_labels=torch.from_numpy(batch_ids).long()
-                if config.DSBN or config.DAR or config.use_batch_labels
-                else None,
+                batch_labels=(
+                    torch.from_numpy(batch_ids).long()
+                    if config.DSBN or config.DAR or config.use_batch_labels
+                    else None
+                ),
                 time_step=0,
                 return_np=True,
             )

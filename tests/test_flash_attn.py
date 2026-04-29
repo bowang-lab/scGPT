@@ -260,7 +260,12 @@ def test_flash_mha_mask_effect():
     mha.eval()
 
     x = torch.randn(
-        batch_size, seq_len, embed_dim, device=device, dtype=torch.float32, requires_grad=False
+        batch_size,
+        seq_len,
+        embed_dim,
+        device=device,
+        dtype=torch.float32,
+        requires_grad=False,
     )
 
     # Get output without mask
@@ -360,7 +365,9 @@ def test_fa1_float32_without_amp_behavior():
             # FA1 may raise a bare AssertionError (no message) or a typed error.
             # A bare assertion is also acceptable explicit failure behavior.
             if msg:
-                assert any(k in msg for k in ["float16", "bfloat16", "dtype", "Half", "BFloat"])
+                assert any(
+                    k in msg for k in ["float16", "bfloat16", "dtype", "Half", "BFloat"]
+                )
 
 
 @pytest.mark.skipif(not flash_attn_available, reason="flash-attn not installed")

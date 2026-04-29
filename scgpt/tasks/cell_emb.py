@@ -128,9 +128,11 @@ def get_batch_cell_embeddings(
                     input_gene_ids,
                     data_dict["expr"].to(device),
                     src_key_padding_mask=src_key_padding_mask,
-                    batch_labels=data_dict["batch_labels"].to(device)
-                    if use_batch_labels
-                    else None,
+                    batch_labels=(
+                        data_dict["batch_labels"].to(device)
+                        if use_batch_labels
+                        else None
+                    ),
                 )
 
                 embeddings = embeddings[:, 0, :]  # get the <cls> position embedding

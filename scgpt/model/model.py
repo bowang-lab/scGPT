@@ -289,14 +289,18 @@ class TransformerModel(nn.Module):
         if self.use_batch_labels:
             batch_emb = self.batch_encoder(batch_labels)  # (batch, embsize)
         mlm_output = self.decoder(
-            transformer_output
-            if not self.use_batch_labels
-            else torch.cat(
-                [
-                    transformer_output,
-                    batch_emb.unsqueeze(1).repeat(1, transformer_output.shape[1], 1),
-                ],
-                dim=2,
+            (
+                transformer_output
+                if not self.use_batch_labels
+                else torch.cat(
+                    [
+                        transformer_output,
+                        batch_emb.unsqueeze(1).repeat(
+                            1, transformer_output.shape[1], 1
+                        ),
+                    ],
+                    dim=2,
+                )
             ),
             # else transformer_output + batch_emb.unsqueeze(1),
         )
@@ -343,14 +347,18 @@ class TransformerModel(nn.Module):
 
         output = {}
         mlm_output = self.decoder(
-            transformer_output
-            if not self.use_batch_labels
-            else torch.cat(
-                [
-                    transformer_output,
-                    batch_emb.unsqueeze(1).repeat(1, transformer_output.shape[1], 1),
-                ],
-                dim=2,
+            (
+                transformer_output
+                if not self.use_batch_labels
+                else torch.cat(
+                    [
+                        transformer_output,
+                        batch_emb.unsqueeze(1).repeat(
+                            1, transformer_output.shape[1], 1
+                        ),
+                    ],
+                    dim=2,
+                )
             ),
             # else transformer_output + batch_emb.unsqueeze(1),
         )
@@ -399,9 +407,11 @@ class TransformerModel(nn.Module):
             output["loss_cce"] = self.creterion_cce(cos_sim, labels)
         if MVC:
             mvc_output = self.mvc_decoder(
-                cell_emb
-                if not self.use_batch_labels
-                else torch.cat([cell_emb, batch_emb], dim=1),
+                (
+                    cell_emb
+                    if not self.use_batch_labels
+                    else torch.cat([cell_emb, batch_emb], dim=1)
+                ),
                 # else cell_emb + batch_emb,
                 self.cur_gene_token_embs,
             )
@@ -476,9 +486,11 @@ class TransformerModel(nn.Module):
                 src[i : i + batch_size].to(device),
                 values[i : i + batch_size].to(device),
                 src_key_padding_mask[i : i + batch_size].to(device),
-                batch_labels[i : i + batch_size].to(device)
-                if batch_labels is not None
-                else None,
+                (
+                    batch_labels[i : i + batch_size].to(device)
+                    if batch_labels is not None
+                    else None
+                ),
             )
             output = raw_output.detach()
             if output_to_cpu:
@@ -610,6 +622,7 @@ class FlashTransformerEncoderLayer(nn.Module):
         >>> src = torch.rand(32, 10, 512)
         >>> out = encoder_layer(src)
     """
+
     __constants__ = ["batch_first"]
 
     def __init__(

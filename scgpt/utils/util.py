@@ -14,7 +14,11 @@ import pandas as pd
 from anndata import AnnData
 from matplotlib import pyplot as plt
 from matplotlib import axes
-from IPython import get_ipython
+
+try:
+    from IPython import get_ipython
+except ImportError:
+    get_ipython = lambda: None
 
 from .. import logger
 

@@ -299,14 +299,18 @@ class MultiOmicTransformerModel(nn.Module):
         if self.use_batch_labels:
             batch_emb = self.batch_encoder(batch_labels)  # (batch, embsize)
         mlm_output = self.decoder(
-            transformer_output
-            if not self.use_batch_labels
-            else torch.cat(
-                [
-                    transformer_output,
-                    batch_emb.unsqueeze(1).repeat(1, transformer_output.shape[1], 1),
-                ],
-                dim=2,
+            (
+                transformer_output
+                if not self.use_batch_labels
+                else torch.cat(
+                    [
+                        transformer_output,
+                        batch_emb.unsqueeze(1).repeat(
+                            1, transformer_output.shape[1], 1
+                        ),
+                    ],
+                    dim=2,
+                )
             ),
             # else transformer_output + batch_emb.unsqueeze(1),
         )
@@ -374,11 +378,13 @@ class MultiOmicTransformerModel(nn.Module):
             cat_0 = None
 
         mlm_output = self.decoder(
-            transformer_output
-            if cat_0 is None
-            else torch.cat(
-                [transformer_output, cat_0],
-                dim=2,
+            (
+                transformer_output
+                if cat_0 is None
+                else torch.cat(
+                    [transformer_output, cat_0],
+                    dim=2,
+                )
             ),
         )
         if self.explicit_zero_prob and do_sample:
@@ -444,9 +450,11 @@ class MultiOmicTransformerModel(nn.Module):
 
             mvc_output = self.mvc_decoder(
                 cell_emb if cat_1 is None else torch.cat([cell_emb, cat_1], dim=1),
-                self.cur_gene_token_embs
-                if cat_2 is None
-                else torch.cat([self.cur_gene_token_embs, cat_2], dim=2),
+                (
+                    self.cur_gene_token_embs
+                    if cat_2 is None
+                    else torch.cat([self.cur_gene_token_embs, cat_2], dim=2)
+                ),
             )
 
             if self.explicit_zero_prob and do_sample:
@@ -520,9 +528,11 @@ class MultiOmicTransformerModel(nn.Module):
                 src[i : i + batch_size].to(device),
                 values[i : i + batch_size].to(device),
                 src_key_padding_mask[i : i + batch_size].to(device),
-                batch_labels[i : i + batch_size].to(device)
-                if batch_labels is not None
-                else None,
+                (
+                    batch_labels[i : i + batch_size].to(device)
+                    if batch_labels is not None
+                    else None
+                ),
             )
             output = raw_output.detach()
             if output_to_cpu:
@@ -654,6 +664,7 @@ class FlashTransformerEncoderLayer(nn.Module):
         >>> src = torch.rand(32, 10, 512)
         >>> out = encoder_layer(src)
     """
+
     __constants__ = ["batch_first"]
 
     def __init__(

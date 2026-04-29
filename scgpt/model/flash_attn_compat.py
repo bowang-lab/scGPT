@@ -53,19 +53,23 @@ flash_attn_available = flash_attn_backend is not None
 def get_flash_attn_info() -> str:
     """
     Return a human-readable string describing the detected flash-attn backend.
-    
+
     Returns:
-        String describing the backend (e.g., "flash-attn 1.x", "flash-attn 2.x", 
+        String describing the backend (e.g., "flash-attn 1.x", "flash-attn 2.x",
         or "not installed").
-        
+
     Note:
         FA1 is preferred when available for its simpler API.
         FA2 is used as fallback with a simplified wrapper (no rotary, MQA/GQA, etc.).
     """
     if flash_attn_backend == "fa1":
-        return "flash-attn 1.x (preferred - FlashMHA with explicit FlashAttention wrapper)"
+        return (
+            "flash-attn 1.x (preferred - FlashMHA with explicit FlashAttention wrapper)"
+        )
     elif flash_attn_backend == "fa2":
-        return "flash-attn 2.x (fallback - MHA module with simplified wrapper interface)"
+        return (
+            "flash-attn 2.x (fallback - MHA module with simplified wrapper interface)"
+        )
     elif flash_attn_error is not None:
         return f"flash-attn import failed: {flash_attn_error}"
     else:
@@ -75,7 +79,7 @@ def get_flash_attn_info() -> str:
 class FlashMHA(nn.Module):
     """
     Compatibility wrapper for flash-attn 1.x and 2.x MHA classes.
-    
+
     **API Preference Strategy:**
     - **FA1 (Preferred):** Uses the simple public API from flash_attn.flash_attention.FlashMHA.
       This provides a straightforward interface for basic use cases.
@@ -107,7 +111,7 @@ class FlashMHA(nn.Module):
     ) -> None:
         """
         Initialize FlashMHA with parameters compatible with FA1 API.
-        
+
         Args:
             embed_dim: Embedding dimension.
             num_heads: Number of attention heads.
@@ -118,13 +122,13 @@ class FlashMHA(nn.Module):
             device: Device for model parameters.
             dtype: Data type for model parameters.
             **kwargs: Additional backend-specific parameters (mostly for FA2 fallback).
-            
+
         Implementation Details:
             - **FA1 path:** Directly instantiates FlashMHA from flash_attn.flash_attention.
             - **FA2 path:** Instantiates MHA from flash_attn.modules.mha with simplified
               configuration. Constructor parameters are introspected to avoid passing
               unsupported arguments (different FA2 versions vary in their accepted kwargs).
-        
+
         Notes on key_padding_mask:
             - Uses flash-attn convention: True=keep/valid token, False=masked token.
             - This matches FA1 unpadding utilities and FA2 MHA behavior.
@@ -133,7 +137,9 @@ class FlashMHA(nn.Module):
         """
         super().__init__()
         if not batch_first:
-            raise ValueError("FlashMHA wrapper currently supports batch_first=True only.")
+            raise ValueError(
+                "FlashMHA wrapper currently supports batch_first=True only."
+            )
 
         if not flash_attn_available:
             raise ImportError(
@@ -189,7 +195,7 @@ class FlashMHA(nn.Module):
     ) -> Tuple[Tensor, Optional[Tensor]]:
         """
         Forward pass with support for key padding mask.
-        
+
         Args:
             x: Input tensor of shape (batch, seq_len, embed_dim).
             key_padding_mask: Optional bool mask of shape (batch, seq_len).
@@ -198,15 +204,15 @@ class FlashMHA(nn.Module):
                              This follows flash-attn convention (FA1 and FA2).
                              If your upstream mask uses PyTorch Transformer semantics
                              (True=pad), invert it before passing to FlashMHA.
-            need_weights: Whether to return attention weights (rarely supported 
+            need_weights: Whether to return attention weights (rarely supported
                          efficiently in flash attention). Default: False.
             **kwargs: Additional backend-specific arguments.
-            
+
         Returns:
             Tuple[output, attn_weights_or_none]:
                 - output: Attention output of shape (batch, seq_len, embed_dim).
                 - attn_weights_or_none: None (flash attention doesn't expose weights efficiently).
-                
+
         Notes:
               * Both backends perform padding-aware attention internally:
               * Unpad input to remove padding tokens
@@ -251,7 +257,7 @@ class FlashMHA(nn.Module):
             if out_tensor.dtype != orig_dtype:
                 out_tensor = out_tensor.to(orig_dtype)
             return out_tensor, attn_weights
-        
+
         # Normalize output to always be (output, attn_weights_or_none)
         if out.dtype != orig_dtype:
             out = out.to(orig_dtype)
@@ -323,7 +329,9 @@ class _FA2FlashAttention(nn.Module):
 
         # Packed path with mask -> unpad to varlen -> flash -> pad back.
         if _fa2_unpad_input is None or _fa2_pad_input is None:
-            raise ImportError("flash_attn.bert_padding (unpad_input/pad_input) not available")
+            raise ImportError(
+                "flash_attn.bert_padding (unpad_input/pad_input) not available"
+            )
         if _fa2_varlen_qkvpacked_func is None:
             raise ImportError("flash_attn_varlen_qkvpacked_func not available")
         if rearrange is None:
@@ -341,7 +349,9 @@ class _FA2FlashAttention(nn.Module):
             raise RuntimeError(
                 f"Unexpected unpad_input output tuple length: {len(unpad_out)}"
             )
-        qkv_unpad = rearrange(x_unpad, "nnz (three h d) -> nnz three h d", three=3, h=nheads)
+        qkv_unpad = rearrange(
+            x_unpad, "nnz (three h d) -> nnz three h d", three=3, h=nheads
+        )
 
         out_unpad = _fa2_varlen_qkvpacked_func(
             qkv_unpad,
@@ -352,7 +362,12 @@ class _FA2FlashAttention(nn.Module):
             causal=causal,
         )
         out = rearrange(
-            _fa2_pad_input(rearrange(out_unpad, "nnz h d -> nnz (h d)"), indices, batch_size, seqlen),
+            _fa2_pad_input(
+                rearrange(out_unpad, "nnz h d -> nnz (h d)"),
+                indices,
+                batch_size,
+                seqlen,
+            ),
             "b s (h d) -> b s h d",
             h=nheads,
         )
@@ -412,12 +427,16 @@ class _FA2FlashMHA(nn.Module):
     ) -> Tuple[Tensor, Optional[Tensor]]:
         if kwargs:
             unexpected = ", ".join(sorted(kwargs.keys()))
-            raise TypeError(f"Unsupported kwargs for _FA2FlashMHA.forward: {unexpected}")
+            raise TypeError(
+                f"Unsupported kwargs for _FA2FlashMHA.forward: {unexpected}"
+            )
         if rearrange is None:
             raise ImportError("einops is required for _FA2FlashMHA")
 
         qkv = self.Wqkv(x)
-        qkv = rearrange(qkv, "b s (three h d) -> b s three h d", three=3, h=self.num_heads)
+        qkv = rearrange(
+            qkv, "b s (three h d) -> b s three h d", three=3, h=self.num_heads
+        )
         context, attn_weights = self.inner_attn(
             qkv,
             key_padding_mask=key_padding_mask,
@@ -434,7 +453,7 @@ def get_flash_attn_parameter_rename_rules(
 ) -> dict:
     """
     Detect FA1 ↔ FA2 parameter naming mismatches and generate rename rules.
-    
+
     **Issue Background:**
     Historical checkpoints may use one of two naming layouts:
     - Direct layout: `self_attn.Wqkv.weight`, `self_attn.out_proj.weight`, etc.
@@ -442,21 +461,21 @@ def get_flash_attn_parameter_rename_rules(
 
     Current compatibility wrapper stores attention parameters under wrapped
     layout (`self_attn._impl.*`) for both FA1 and FA2 backends.
-    
+
     This function detects which version the checkpoint uses and generates rename rules
     to convert to the current backend if needed.
-    
+
     Args:
         checkpoint_state_dict: The checkpoint state dict to inspect.
         current_backend: Current flash-attn backend ("fa1", "fa2", or None for auto).
                         If None, uses global flash_attn_backend. If None and no
                         flash-attn available, returns empty dict.
-    
+
     Returns:
         Dict of rename rules {old_pattern: new_pattern} for regex-based renaming
         in flexible_load_model_weights(..., rename_rules=...).
         Empty dict if no mismatch detected or conversion not needed.
-        
+
     Example:
         >>> ckpt = torch.load("old_fa1_model.pt")
         >>> rules = get_flash_attn_parameter_rename_rules(ckpt, current_backend="fa2")
@@ -465,27 +484,29 @@ def get_flash_attn_parameter_rename_rules(
     """
     if current_backend is None:
         current_backend = flash_attn_backend
-    
+
     if current_backend is None or not checkpoint_state_dict:
         return {}
-    
+
     # Detect which version the checkpoint uses by examining parameter names
-    has_impl_wqkv = any("self_attn._impl.Wqkv" in k for k in checkpoint_state_dict.keys())
+    has_impl_wqkv = any(
+        "self_attn._impl.Wqkv" in k for k in checkpoint_state_dict.keys()
+    )
     has_direct_wqkv = any(
-        "self_attn.Wqkv" in k and "self_attn._impl" not in k 
+        "self_attn.Wqkv" in k and "self_attn._impl" not in k
         for k in checkpoint_state_dict.keys()
     )
-    
+
     # Current target layout (both FA1/FA2): wrapped keys under self_attn._impl.*
     if has_impl_wqkv:
         return {}
-    
+
     # Mismatch: need conversion
     rename_rules = {}
-    
+
     if has_direct_wqkv:
         # Convert direct layout -> wrapped layout
         rename_rules[r"self_attn\.Wqkv\."] = "self_attn._impl.Wqkv."
         rename_rules[r"self_attn\.out_proj\."] = "self_attn._impl.out_proj."
-    
+
     return rename_rules

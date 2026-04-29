@@ -101,9 +101,11 @@ class Preprocessor:
             logger.info("Filtering genes by counts ...")
             sc.pp.filter_genes(
                 adata,
-                min_counts=self.filter_gene_by_counts
-                if isinstance(self.filter_gene_by_counts, int)
-                else None,
+                min_counts=(
+                    self.filter_gene_by_counts
+                    if isinstance(self.filter_gene_by_counts, int)
+                    else None
+                ),
             )
 
         # step 2: filter cells
@@ -114,9 +116,11 @@ class Preprocessor:
             logger.info("Filtering cells by counts ...")
             sc.pp.filter_cells(
                 adata,
-                min_counts=self.filter_cell_by_counts
-                if isinstance(self.filter_cell_by_counts, int)
-                else None,
+                min_counts=(
+                    self.filter_cell_by_counts
+                    if isinstance(self.filter_cell_by_counts, int)
+                    else None
+                ),
             )
 
         # step 3: normalize total
@@ -124,9 +128,11 @@ class Preprocessor:
             logger.info("Normalizing total counts ...")
             normed_ = sc.pp.normalize_total(
                 adata,
-                target_sum=self.normalize_total
-                if isinstance(self.normalize_total, float)
-                else None,
+                target_sum=(
+                    self.normalize_total
+                    if isinstance(self.normalize_total, float)
+                    else None
+                ),
                 layer=key_to_process,
                 inplace=False,
             )["X"]
@@ -160,9 +166,9 @@ class Preprocessor:
             sc.pp.highly_variable_genes(
                 adata,
                 layer=self.hvg_use_key,
-                n_top_genes=self.subset_hvg
-                if isinstance(self.subset_hvg, int)
-                else None,
+                n_top_genes=(
+                    self.subset_hvg if isinstance(self.subset_hvg, int) else None
+                ),
                 batch_key=batch_key,
                 flavor=self.hvg_flavor,
                 subset=True,
