@@ -32,10 +32,31 @@ def test_gene_vocab():
 
 
 def test_gene_vocab_from_dict():
-    gene_vocab = GeneVocab.from_dict({"a": 0, "b": 1, "c": 2})
-    assert len(gene_vocab) == 3
+    gene_vocab = GeneVocab.from_dict({"c": 2, "<pad>": 3, "a": 0, "b": 1})
+    assert len(gene_vocab) == 4
+    assert gene_vocab.get_itos() == ["a", "b", "c", "<pad>"]
     assert gene_vocab["a"] == 0
     assert gene_vocab["c"] == 2
+    assert gene_vocab.get_default_index() == 3
+
+
+@pytest.mark.parametrize(
+    "token2idx",
+    [
+        {"a": 0, "b": 2},
+        {"a": 0, "b": 0},
+        {"a": -1, "b": 0},
+    ],
+)
+def test_gene_vocab_from_dict_rejects_invalid_index_sequence(token2idx):
+    with pytest.raises(ValueError, match="unique, consecutive indices"):
+        GeneVocab.from_dict(token2idx)
+
+
+@pytest.mark.parametrize("invalid_index", [0.0, True, "0"])
+def test_gene_vocab_from_dict_rejects_non_integer_indices(invalid_index):
+    with pytest.raises(TypeError, match="must be an integer"):
+        GeneVocab.from_dict({"a": invalid_index})
 
 
 def test_gene_vocab_from_file():
@@ -98,7 +119,7 @@ def test_builtin_vocab_append_insert():
 
     v.insert_token("z", 0)
     assert v["z"] == 0
-    assert v["a"] == 1   # shifted
+    assert v["a"] == 1  # shifted
     assert len(v) == 4
 
 
@@ -144,4 +165,3 @@ def test_gene_vocab_init_from_torchtext():
     assert len(gv) == 3
     for tok in tt_vocab.get_itos():
         assert gv[tok] == tt_vocab[tok]
-

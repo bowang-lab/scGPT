@@ -22,17 +22,11 @@ from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
-from torchtext.vocab import Vocab
-from torchtext._torchtext import (
-    Vocab as VocabPybind,
-)
-
-from scgpt.tokenizer.gene_tokenizer import GeneVocab
 
 sys.path.append("../")
 import scgpt as scg
 from scgpt.model import TransformerModel, AdversarialDiscriminator
-from scgpt.tokenizer import tokenize_and_pad_batch, random_mask_value
+from scgpt.tokenizer import GeneVocab, tokenize_and_pad_batch, random_mask_value
 from scgpt.loss import (
     masked_mse_loss,
     masked_relative_error,
@@ -222,8 +216,9 @@ batch_ids = np.array(batch_ids)
 
 # %%
 if config.load_model is None:
-    vocab = Vocab(
-        VocabPybind(genes + special_tokens, None)
+    tokens = genes + special_tokens
+    vocab = GeneVocab.from_dict(
+        {token: index for index, token in enumerate(tokens)}
     )  # bidirectional lookup [gene <-> int]
 vocab.set_default_index(vocab["<pad>"])
 gene_ids = np.array(vocab(genes), dtype=int)
