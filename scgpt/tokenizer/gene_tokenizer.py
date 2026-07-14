@@ -143,12 +143,24 @@ class GeneVocab(Vocab):
         Args:
             token2idx (Dict[str, int]): Dictionary mapping tokens to indices.
         """
-        # initiate an empty vocabulary first
-        _vocab = cls([], default_token=None)
+        for token, index in token2idx.items():
+            if not isinstance(index, int) or isinstance(index, bool):
+                raise TypeError(
+                    f"Vocabulary index for {token!r} must be an integer, "
+                    f"got {type(index).__name__}."
+                )
 
-        # add the tokens to the vocabulary, GeneVocab requires consecutive indices
-        for t, i in sorted(token2idx.items(), key=lambda x: x[1]):
-            _vocab.insert_token(t, i)
+        ordered_items = sorted(token2idx.items(), key=lambda item: item[1])
+        indices = [index for _, index in ordered_items]
+        if indices != list(range(len(ordered_items))):
+            raise ValueError(
+                "GeneVocab requires unique, consecutive indices starting at 0."
+            )
+
+        # Initialize all tokens at once. Repeated insert_token calls rebuild the
+        # complete token-to-index mapping in the pure-Python backend.
+        _vocab = cls([], default_token=None)
+        _vocab._init_from_tokens([token for token, _ in ordered_items])
 
         if default_token is not None and default_token in _vocab:
             _vocab.set_default_token(default_token)
